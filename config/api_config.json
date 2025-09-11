@@ -1,0 +1,30 @@
+{
+    "model": "gpt-5",
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that helps people find information."
+        },
+        {
+            "role": "user",
+            "content": "user prompt"
+        },
+        {
+            "role": "assistant",
+            "content": "assistant response"
+        }
+    ],
+    "temperature": 0.7,
+    "top_p": 1.0,
+    "n": 1,
+    "stream": false,
+    "stop": null,
+    "max_tokens": 2048,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "logit_bias": {},
+    "user": "default-user",
+    "response_format": null,
+    "tools": null,
+    "tool_choice": null
+}

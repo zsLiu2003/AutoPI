@@ -1,8 +1,13 @@
 from config.parser import load_config
 from abc import ABC, abstractmethod
 import os
+import requests
+import json
 
 
+BASE_URL = "https://api.cxhao.com"  # Updated to OpenAI's base URL for GPT-5 compatibility; replace if using a different provider
+API_KEY = "sk-TRRdrKYwo1idvAdARhdQhk6DNY5bo0Agnha7foM8IqmeNMUo"  # Replace with your actual API key (get from OpenAI dashboard)
+ENDPOINT = "/v1/chat/completions"
 def get_api_key(self, model_name: str) -> str:
     """
     Get API key from config.yaml
@@ -14,30 +19,110 @@ def get_api_key(self, model_name: str) -> str:
 
 class LLMProvider(ABC):
     @abstractmethod
-    def generate_response(self, prompt: str, system_prompt: str = None) -> str:
+    def generate_response(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
         pass
 
+class Text_LLM_Provider(LLMProvider):
+    def __init__(self, model_name: str = 'gpt-5'):
+        self.model_name = model_name
+        self.api_url = f"{BASE_URL}{ENDPOINT}"
+        self.model_name = model_name
+        api_key=get_api_key("openai"),
+        self.headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+            "Content-Type": "application/json"
+        }
+    
+    def generate_response(self, prompt, system_prompt = None, **kwargs):
+        if system_prompt is None:
+            system_prompt = "You are a helpful assistant that helps people find information."
+        
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "top_k": 50,
+            "max_tokens": 1024,
+        }
+        payload.update(kwargs)
 
+        response = requests.post(
+            self.api_url,
+            headers=self.headers,
+            data=json.dumps(payload),
+            timeout=30
+        )
+
+        response.raise_for_status()  # 如果不是200，直接抛出HTTPError
+        data = response.json()
+        
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"]
+        else:
+            raise ValueError(f"Unexpected response format: {data}")
+    
 class OpenAIProvider(LLMProvider):
     def __init__(self, model_name: str = 'gpt-5'):
         import openai
+        self.api_url = f"{BASE_URL}{ENDPOINT}"
         self.model_name = model_name
-        self.client = openai.OpenAI(get_api_key("openai"))
+        api_key=get_api_key("openai"),
+        self.headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+            "Content-Type": "application/json"
+        }
+    
+    def generate_response(self, prompt, system_prompt = None, **kwargs):
+        if system_prompt is None:
+            system_prompt = "You are a helpful assistant that helps people find information."
+        
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "top_k": 50,
+            "max_tokens": 1024,
+        }
+        payload.update(kwargs)
 
-    def generate_response(self, prompt, system_prompt = None):
-        return super().generate_response(prompt, system_prompt)
+        response = requests.post(
+            self.api_url,
+            headers=self.headers,
+            data=json.dumps(payload),
+            timeout=30
+        )
+
+        response.raise_for_status()  # 如果不是200，直接抛出HTTPError
+        data = response.json()
+        
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"]
+        else:
+            raise ValueError(f"Unexpected response format: {data}")
     
 class GeminiProvider(LLMProvider):
     def __init__(self, model_name: str = 'gemini-2.5-pro'):
         from google.generativeai import generativeai as genai
         self.model_name = model_name
-        genai.configure(api_key=get_api_key("gemini"))
+        genai.configure(api_key=get_api_key("google"))
 
     def generate_response(self, prompt, system_prompt = None):
         return super().generate_response(prompt, system_prompt) 
     
 class AnthropicProvider(LLMProvider):  
-    def __init__(self, model_name: str = 'claude-4'):
+    def __init__(self, model_name: str = 'claude-sonnet-4-20250514'):
         import anthropic
         self.model_name = model_name
         self.client = anthropic.Anthropic(api_key=get_api_key("anthropic"))
@@ -49,7 +134,7 @@ class GrokProvider(LLMProvider):
     def __init__(self, model_name: str = 'grok-4'):
         import openai
         self.model_name = model_name
-        self.client = openai.OpenAI(api_key=get_api_key("grok"))
+        self.client = openai.OpenAI(api_key=get_api_key("xai"))
 
     def generate_response(self, prompt, system_prompt = None):
         return super().generate_response(prompt, system_prompt) 

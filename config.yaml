@@ -1,12 +1,6 @@
 api_keys:
-  openai:
-  gemini:
-  anthropic:
-  grok:
+  openai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
+  google: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
+  anthropic: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
+  xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
 
-gradient_model: "llama-2-7B"
-generation_model: "gpt-5"
-max_generation_tokens: 1024
-temperature: 0.7
-top_p: 0.9 
-top_k: 50

@@ -32,7 +32,11 @@ def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt
     else:
         full_prompt = prompt
 
+
+    inputs_full = tokenizer(full_prompt, return_tensors='pt')
+    le = inputs_full["input_ids"].shape[1]
     full_prompt += target_output
+    
     inputs = tokenizer(full_prompt, return_tensors='pt')
     input_ids = inputs['input_ids']
     attention_mask = inputs['attention_mask']
@@ -47,19 +51,12 @@ def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt
     logits = outputs.logits # shape = (1, seq_len, vocab_size)
     shift_logits = logits[:, :-1, :].contiguous() # shape = (1, seq_len-1, vocab_size)
     shift_labels = input_ids[:, 1:].contiguous() # shape = (1, seq_len-1)
-    # Compute loss for the target token
+    ignore_upto = le - 1
+    shift_labels[:, :ignore_upto] = -100 # shape = (1, seq_len-1)
+    loss_function = torch.nn.CrossEntropyLoss(reduction='sum', ingnore_index=-100)
+    loss = loss_function(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)) # shape = ()
 
-    # Backward pass
-    loss.backward()
+    return loss.item()
 
-    # Get gradients
-    gradients = input_ids.grad[0]
 
-    # Compute importance scores
-    token_importance = []
-    for i, token_id in enumerate(input_ids[0]):
-        token = tokenizer.decode([token_id])
-        grad_norm = gradients[i].norm().item()
-        token_importance.append((token, grad_norm))
-
-    return token_importance
+    
