@@ -5,7 +5,7 @@ from tqdm import tqdm
 import json
 from typing import List, Tuple
 
-def get_gradient(model_name: str, prompt: str, target_token: str, system_prompt: str = None) -> List[Tuple[str, float]]:
+def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt: str = None, objective_prompt: str = None) -> List[Tuple[str, float]]:
     """
     Get gradient-based importance scores for each token in the prompt.
     
@@ -32,6 +32,7 @@ def get_gradient(model_name: str, prompt: str, target_token: str, system_prompt:
     else:
         full_prompt = prompt
 
+    full_prompt += target_output
     inputs = tokenizer(full_prompt, return_tensors='pt')
     input_ids = inputs['input_ids']
     attention_mask = inputs['attention_mask']
@@ -39,20 +40,14 @@ def get_gradient(model_name: str, prompt: str, target_token: str, system_prompt:
     if torch.cuda.is_available():
         input_ids = input_ids.to('cuda')
         attention_mask = attention_mask.to('cuda')
-
-    # Get target token ID
-    target_id = tokenizer.encode(target_token, add_special_tokens=False)[0]
-
-    # Enable gradient tracking
-    input_ids.requires_grad_(True)
+    
 
     # Forward pass
-    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-    logits = outputs.logits
-
+    outputs = model(input_ids=input_ids, attention_mask=attention_mask) # shape = (1, seq_len, vocab_size)
+    logits = outputs.logits # shape = (1, seq_len, vocab_size)
+    shift_logits = logits[:, :-1, :].contiguous() # shape = (1, seq_len-1, vocab_size)
+    shift_labels = input_ids[:, 1:].contiguous() # shape = (1, seq_len-1)
     # Compute loss for the target token
-    target_logits = logits[0, -1, target_id]
-    loss = -F.log_softmax(logits[0, -1], dim=-1)[target_id]
 
     # Backward pass
     loss.backward()
