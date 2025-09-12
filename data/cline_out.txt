@@ -1,0 +1,4 @@
+<execute_command>
+<command>COMMAND</command>
+<requires_approval>false</requires_approval>
+</execute_command>

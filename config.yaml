@@ -4,3 +4,4 @@ api_keys:
   anthropic: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
 
+data_path: "/home/zesen/AutoPI/data"

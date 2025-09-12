@@ -1,18 +1,38 @@
 from dataclasses import dataclass
+from config.parser import load_config
 
 @dataclass
-class InputData:
+class PromptData:
     system_prompt: str
     user_prompt: str
-    execution_command: str
-    assistant_prompt: str # this variable presents the historical conversation
+    expected_output_prompt: str
+    assistant_prompt: str # this variable presents the historical conversation; assistant_prompt = prvious response + user_prompt
     mutated_prompt: str
+    llmjudge_prompt: str
 
-def get_example_inputs() -> InputData:
-    return InputData(
-        system_prompt="You are an AI system assisting with pipeline execution.",
-        assistant_prompt="Previous context: optimization initialized.",
-        tool_description="A tool that provides natural language optimizations.",
-        user_prompt="Optimize my query for gradient-based evaluation."
-    )
+
+def get_system_prompt(agent_name: str, config: dict) -> str:
+
+    """
+    retrieves the system prompt and expected output for a given agent from configuration files.
+    """
+
+    data_path = config.get("data_path", "./data")
+    system_prompt_file = f"{data_path}/{agent_name}.txt"
+    expected_output_file = f"{data_path}/{agent_name}_output.txt"
+    
+    try:
+        with open(system_prompt_file, 'r') as f:
+            system_prompt = f.read().strip()
+        with open(expected_output_file, 'r') as f:
+            expected_output = f.read().strip()
+        return system_prompt, expected_output
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return "", ""
+    
+def assistant_prompt(historical_conversation: str, response: str) -> str:
+    return historical_conversation + "\n" + "llm_reeponse" + response
+
+
 

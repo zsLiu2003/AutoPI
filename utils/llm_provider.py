@@ -22,7 +22,7 @@ class LLMProvider(ABC):
     def generate_response(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
         pass
 
-class Text_LLM_Provider(LLMProvider):
+class TestLLMProvider(LLMProvider):
     def __init__(self, model_name: str = 'gpt-5'):
         self.model_name = model_name
         self.api_url = f"{BASE_URL}{ENDPOINT}"
@@ -35,7 +35,7 @@ class Text_LLM_Provider(LLMProvider):
             "Content-Type": "application/json"
         }
     
-    def generate_response(self, prompt, system_prompt = None, **kwargs):
+    def generate_response(self, user_prompt, system_prompt = None, **kwargs):
         if system_prompt is None:
             system_prompt = "You are a helpful assistant that helps people find information."
         
@@ -43,7 +43,7 @@ class Text_LLM_Provider(LLMProvider):
             "model": self.model_name,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.7,
             "top_p": 0.9,
