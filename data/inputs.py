@@ -10,7 +10,15 @@ class PromptData:
     mutated_prompt: str
     llmjudge_prompt: str
 
-
+    def __init__(self, system_prompt: str, user_prompt: str, expected_output_prompt: str = "", assistant_prompt: str = "", mutated_prompt: str = "", llmjudge_prompt: str = ""):
+        self.system_prompt = system_prompt
+        self.expected_output_prompt = expected_output_prompt
+        self.assistant_prompt = assistant_prompt
+        self.mutated_prompt = mutated_prompt
+        self.llmjudge_prompt = llmjudge_prompt
+        self.user_prompt = user_prompt
+        # self.messages = self.generate_messages()
+        
 def get_system_prompt(agent_name: str, config: dict) -> str:
 
     """

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import os
 import requests
 import json
+from data.inputs import PromptData
 
 
 BASE_URL = "https://api.cxhao.com"  # Updated to OpenAI's base URL for GPT-5 compatibility; replace if using a different provider
@@ -19,7 +20,7 @@ def get_api_key(self, model_name: str) -> str:
 
 class LLMProvider(ABC):
     @abstractmethod
-    def generate_response(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
+    def generate_response(self, prompt: PromptData, **kwargs) -> str:
         pass
 
 class TestLLMProvider(LLMProvider):
@@ -35,15 +36,17 @@ class TestLLMProvider(LLMProvider):
             "Content-Type": "application/json"
         }
     
-    def generate_response(self, user_prompt, system_prompt = None, **kwargs):
-        if system_prompt is None:
-            system_prompt = "You are a helpful assistant that helps people find information."
+    def generate_response(self, prompt: PromptData, **kwargs):
+        # if system_prompt is None:
+        #     system_prompt = "You are a helpful assistant that helps people find information."
         
+        messages = prompt.ger
         payload = {
             "model": self.model_name,
             "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "system", "content": prompt.system_prompt},
+                {"role": "user", "content": prompt.user_prompt},
+                {"role": "assistant", "content": prompt.assistant_prompt},
             ],
             "temperature": 0.7,
             "top_p": 0.9,
