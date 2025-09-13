@@ -97,9 +97,11 @@ class CommandExecutor:
         return f"""
         TARGET_SYSTEM_PROMPT: {input_data.system_prompt}
         
-        MALICIOUS_COMMAND: {input_data.user_prompt}
+        MALICIOUS_COMMAND: {input_data.target_command}
         
-        BASE_TOOL_DESCRIPTION: {input_data.expected_output_prompt}
+        BASE_TOOL_DESCRIPTION: {input_data.seed_tool_des}
+        
+        USER_PROMPT: {input_data.user_prompt}
         
         NUM_VARIANTS: {num_variants}
         

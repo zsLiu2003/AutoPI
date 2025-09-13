@@ -55,16 +55,21 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             target_command=target_command
         )
         
-        # Initialize components
-        evaluator = CombinedEvaluator(
-            judge_model=args.judge_model,
-            gradient_model=args.gradient_model,
-            judge_weight=args.judge_weight,
-            gradient_weight=args.gradient_weight
+        # Initialize components with separated models
+        optimizer = PromptOptimizer(
+            target_model=args.target_model,
+            auxiliary_model=args.auxiliary_model, 
+            gradient_model=args.gradient_model
         )
         
-        optimizer = PromptOptimizer(evaluator=evaluator)
+        # Set up models and weights
         optimizer.set_target_agent(args.target_model)
+        optimizer.set_auxiliary_model(args.auxiliary_model)
+        optimizer.set_gradient_model(args.gradient_model)
+        
+        # Update evaluator weights
+        optimizer.evaluator.judge_weight = args.judge_weight
+        optimizer.evaluator.gradient_weight = args.gradient_weight
         
         logger.info("Starting optimization process...")
         logger.info(f"Target command: {input_data.target_command}")
@@ -111,14 +116,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run basic optimization
+  # Basic usage
   python main.py --target-command "ls -la" --seed-tool "file_browser: Browse and list files"
   
-  # Run with custom parameters
+  # Custom parameters
   python main.py --target-command "rm -rf /tmp/test" --seed-tool "cleanup_tool: Clean temporary files" --max-generations 15
   
-  # Run with different models
-  python main.py --target-command "pwd" --seed-tool "location_tool: Show current directory" --target-model gpt-4
+  # Different model configurations
+  python main.py --target-command "pwd" --seed-tool "location_tool: Show current directory" --target-model gpt-5 --auxiliary-model gpt-4 --gradient-model gpt2
+  
+  # Adjust scoring weights
+  python main.py --target-command "ls" --seed-tool "file_tool: List files" --judge-weight 0.7 --gradient-weight 0.3
         """
     )
     
@@ -142,11 +150,11 @@ Examples:
     
     # Model configuration
     parser.add_argument('--target-model', type=str, default='gpt-5',
-                       help='Target agent model (default: gpt-5)')
-    parser.add_argument('--judge-model', type=str, default='gpt-5',
-                       help='LLM judge model (default: gpt-5)')
+                       help='Target agent model being tested (default: gpt-5)')
+    parser.add_argument('--auxiliary-model', type=str, default='gpt-4',
+                       help='Auxiliary model for mutation generation and LLM judge (default: gpt-4)')
     parser.add_argument('--gradient-model', type=str, default='gpt2',
-                       help='Gradient evaluation model (default: gpt2)')
+                       help='Gradient/loss calculation model (default: gpt2)')
     
     # Scoring weights
     parser.add_argument('--judge-weight', type=float, default=0.6,

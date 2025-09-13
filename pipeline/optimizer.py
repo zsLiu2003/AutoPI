@@ -14,14 +14,40 @@ logger = get_logger(__name__)
 class PromptOptimizer:
     """Main prompt optimization engine using evolutionary strategies for user-agnostic optimization"""
     
-    def __init__(self, evaluator: CombinedEvaluator = None, executor: CommandExecutor = None):
-        self.evaluator = evaluator or CombinedEvaluator()
+    def __init__(self, evaluator: CombinedEvaluator = None, executor: CommandExecutor = None,
+                 target_model: str = "gpt-5", auxiliary_model: str = "gpt-4", gradient_model: str = "gpt2"):
+        self.evaluator = evaluator or CombinedEvaluator(
+            judge_model=auxiliary_model, 
+            gradient_model=gradient_model
+        )
         self.executor = executor or CommandExecutor()
-        self.target_agent_provider = None  # LLM provider for simulating target agent
+        self.target_model = target_model        # Model for target agent being tested
+        self.auxiliary_model = auxiliary_model  # Model for mutation generation and LLM judge
+        self.gradient_model = gradient_model    # Model for gradient/loss calculation
+        self.target_agent_provider = None      # LLM provider for simulating target agent
+        self.auxiliary_provider = None         # LLM provider for auxiliary tasks
         
-    def set_target_agent(self, model_name: str = "gpt-4"):
+    def set_target_agent(self, model_name: str = None):
         """Set the target agent model"""
-        self.target_agent_provider = get_llm_provider(model_name)
+        if model_name:
+            self.target_model = model_name
+        self.target_agent_provider = get_llm_provider(self.target_model)
+        
+    def set_auxiliary_model(self, model_name: str = None):
+        """Set the auxiliary model for mutation and judge"""
+        if model_name:
+            self.auxiliary_model = model_name
+        self.auxiliary_provider = get_llm_provider(self.auxiliary_model)
+        # Update evaluator's judge model
+        self.evaluator.judge_model = self.auxiliary_model
+        self.evaluator.llm_provider = get_llm_provider(self.auxiliary_model)
+        
+    def set_gradient_model(self, model_name: str = None):
+        """Set the gradient model for loss calculation"""
+        if model_name:
+            self.gradient_model = model_name
+        # Update evaluator's gradient model
+        self.evaluator.gradient_model = self.gradient_model
         
     def optimize_user_agnostic(self, input_data: InputData, max_generations: int = 10, 
                               variants_per_generation: int = 4, success_threshold: float = 0.8) -> UserAgnosticOutput:
@@ -38,6 +64,8 @@ class PromptOptimizer:
         
         if not self.target_agent_provider:
             self.set_target_agent()
+        if not self.auxiliary_provider:
+            self.set_auxiliary_model()
             
         current_seed = input_data.seed_tool_des
         history = []  # History for generating mutations
@@ -99,14 +127,15 @@ class PromptOptimizer:
             
             BASE_TOOL_DESCRIPTION: {seed_tool_des}
             
+            USER_PROMPT: {input_data.user_prompt}
+            
             NUM_VARIANTS: {num_variants}
             
             HISTORY: {json.dumps(history[-10:], indent=2) if history else "[]"}
             """
             
-            # Use mutator to generate variants
-            mutator_provider = get_llm_provider("gpt-4")  # Model for generating mutations
-            response = mutator_provider.generate_response(mutator_user_prompt, mutator_system_prompt)
+            # Use auxiliary model to generate variants
+            response = self.auxiliary_provider.generate_response(mutator_user_prompt, mutator_system_prompt)
             
             # Parse JSON response
             variants = json.loads(response)
