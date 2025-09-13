@@ -125,7 +125,7 @@ Based on the above analysis, provide a precise numerical score between 0.0 and 1
             user_prompt=input_data.user_prompt,
             expected_output_prompt=input_data.expected_output_prompt,  # For gradient calculation
             assistant_prompt=input_data.assistant_prompt,
-            seed_tool_des=variant_data.tool_description,
+            seed_tool_des=variant_data.tool_description,  # Pass mutated tool description for evaluation
             target_command=input_data.target_command,
             real_response=variant_data.agent_response  # Use actual agent response for LLM judge
         )
