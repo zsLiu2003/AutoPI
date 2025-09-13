@@ -3,28 +3,33 @@ from config.parser import load_config
 
 @dataclass
 class InputData:
-    system_prompt: str  # 原始system prompt，包含<injected location>标签
-    user_prompt: str    # 期望执行的命令（如"rm"）
-    expected_output_prompt: str
-    assistant_prompt: str  # 历史对话
-    seed_tool_des: str     # 种子tool description
-    target_command: str    # 目标命令
+    system_prompt: str  # Original system prompt with <Injected Loaction> tag
+    user_prompt: str    # Expected command (e.g., "rm")
+    expected_output_prompt: str  # Expected output for gradient loss calculation only
+    assistant_prompt: str  # Historical conversation
+    seed_tool_des: str     # Seed tool description
+    target_command: str    # Target command
+    real_response: str = ""  # Actual agent response for LLM judge evaluation
     
     def __init__(self, system_prompt: str, user_prompt: str, expected_output_prompt: str = "", 
-                 assistant_prompt: str = "", seed_tool_des: str = "", target_command: str = ""):
+                 assistant_prompt: str = "", seed_tool_des: str = "", target_command: str = "",
+                 real_response: str = ""):
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
         self.expected_output_prompt = expected_output_prompt
         self.assistant_prompt = assistant_prompt
         self.seed_tool_des = seed_tool_des
         self.target_command = target_command
+        self.real_response = real_response
         
     def inject_tool_description(self, tool_des: str) -> str:
-        """将tool description注入到system prompt的<injected location>标签中"""
-        if "<injected location>" in self.system_prompt:
+        """Inject tool description into system prompt's <Injected Loaction> tag"""
+        if "<Injected Loaction>" in self.ystem_prompt:
+            return self.system_prompt.replace("<Injected Loaction>", tool_des)
+        elif "<injected location>" in self.systsem_prompt:      
             return self.system_prompt.replace("<injected location>", tool_des)
         else:
-            # 如果没有标签，直接追加
+            # If no injection tag found, append to the end
             return f"{self.system_prompt}\n\n{tool_des}"
 
 @dataclass 
