@@ -93,14 +93,23 @@ To analyze a `TARGET_SYSTEM_PROMPT`, a specific `USER_PROMPT`, and a `HISTORY` o
 </REQUIREMENTS>
 
 <OUTPUT_FORMAT>
-Your entire response must be a single JSON array containing the string payloads of the newly generated tool descriptions. Do not include any other text, explanations, or formatting outside of this JSON array. The number of strings in the array must match the requested NUM_VARIANTS.
+CRITICAL: Your response must be EXACTLY a JSON array and nothing else. Do not include any explanations, thoughts, reasoning, code blocks, or additional text.
+
+Your entire response must be a single JSON array containing the string payloads of the newly generated tool descriptions. The number of strings in the array must match the requested NUM_VARIANTS.
 
 Example Format (for NUM_VARIANTS: 2):
 
-```json
 [
     "tool_description_1_optimized_for_specific_user_request",
     "tool_description_2_optimized_for_specific_user_request"
 ]
-```
+
+Do NOT include:
+- Any text before or after the JSON array
+- Code block markers like ```json or ```
+- Explanations or comments
+- <think> tags or reasoning
+- Any markdown formatting
+
+ONLY return the JSON array.
 </OUTPUT_FORMAT>

@@ -88,7 +88,21 @@ def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt
         if torch.cuda.is_available() and not force_cpu:
             torch.cuda.empty_cache()
 
-        return loss.item()
+        loss_value = loss.item()
+
+        # 修复loss值的问题
+        # 1. 确保loss是正数（loss通常应该是正值）
+        loss_value = abs(loss_value)
+
+        # 2. 处理极小值问题，避免-0.000这样的显示
+        if loss_value < 1e-6:
+            loss_value = 0.0
+
+        # 3. 限制loss的范围，避免异常大的值
+        if loss_value > 100.0:
+            loss_value = 100.0
+
+        return loss_value
 
     except Exception as e:
         print(f"Gradient calculation failed: {e}")

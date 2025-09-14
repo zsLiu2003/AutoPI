@@ -454,13 +454,23 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
             # Clean and parse JSON response
             response = response.strip()
 
+            # Remove thinking tags and other common non-JSON content
+            # Remove <think>...</think> blocks
+            import re
+            response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+
+            # Remove other common thinking patterns
+            response = re.sub(r'<.*?>', '', response)  # Remove any remaining HTML-like tags
+            response = re.sub(r'\*\*.*?\*\*', '', response)  # Remove markdown bold text
+            response = re.sub(r'```.*?```', '', response, flags=re.DOTALL)  # Remove code blocks first
+
             # Try to extract JSON from response if it's wrapped in other text
-            if response.startswith("```json"):
+            if "```json" in response:
                 # Extract JSON from code block
-                start = response.find("[")
-                end = response.rfind("]") + 1
-                if start != -1 and end > start:
-                    response = response[start:end]
+                start = response.find("```json") + 7
+                end = response.find("```", start)
+                if end > start:
+                    response = response[start:end].strip()
 
             elif response.startswith("```"):
                 # Extract from generic code block
@@ -473,20 +483,26 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
                     json_lines.append(line)
                 response = '\n'.join(json_lines).strip()
 
-            # Remove any leading/trailing text that's not JSON
-            if not response.startswith('['):
-                start = response.find('[')
-                if start != -1:
-                    response = response[start:]
+            # Find JSON array boundaries
+            json_start = response.find('[')
+            json_end = response.rfind(']')
 
-            if not response.endswith(']'):
-                end = response.rfind(']')
-                if end != -1:
-                    response = response[:end+1]
+            if json_start != -1 and json_end > json_start:
+                response = response[json_start:json_end+1]
+            elif json_start == -1:
+                # Try to find individual strings and construct array
+                import re
+                # Look for quoted strings that could be variants
+                string_pattern = r'"([^"]*(?:\\.[^"]*)*)"'
+                matches = re.findall(string_pattern, response)
+                if matches:
+                    # Construct JSON array from found strings
+                    response = '[' + ','.join([f'"{match}"' for match in matches]) + ']'
+                    logger.info(f"Constructed JSON array from {len(matches)} found strings")
 
             logger.debug(f"Cleaned response: {response}")
 
-            # Parse JSON response
+            # Parse JSON response with enhanced error handling
             try:
                 variants = json.loads(response)
             except json.JSONDecodeError as json_error:
@@ -494,15 +510,32 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
                 logger.error(f"Problematic response: {response}")
 
                 # Try to fix common JSON issues
-                response = response.replace("'", '"')  # Replace single quotes
-                response = response.replace('",\n]', '"\n]')  # Remove trailing comma
-                response = response.replace(',\n]', '\n]')  # Remove trailing comma
+                fixed_response = response
+
+                # Fix common JSON formatting issues
+                fixed_response = fixed_response.replace("'", '"')  # Replace single quotes
+                fixed_response = fixed_response.replace('",\n]', '"\n]')  # Remove trailing comma
+                fixed_response = fixed_response.replace(',\n]', '\n]')  # Remove trailing comma
+                fixed_response = fixed_response.replace(',]', ']')  # Remove trailing comma
+
+                # Fix unescaped quotes in strings
+                fixed_response = re.sub(r'(?<!\\)"(?=[^,\]\}])', '\\"', fixed_response)
 
                 try:
-                    variants = json.loads(response)
+                    variants = json.loads(fixed_response)
                     logger.info("Fixed JSON parsing after cleanup")
                 except json.JSONDecodeError:
-                    raise ValueError(f"Unable to parse JSON response: {response[:200]}...")
+                    # Last resort: try to extract individual quoted strings
+                    logger.warning("Attempting to extract strings manually from response")
+                    string_pattern = r'"([^"\\]*(\\.[^"\\]*)*)"'
+                    extracted_strings = re.findall(string_pattern, response)
+
+                    if extracted_strings:
+                        # Take only the matched string part (first group)
+                        variants = [match[0] for match in extracted_strings if match[0].strip()]
+                        logger.info(f"Extracted {len(variants)} strings manually")
+                    else:
+                        raise ValueError(f"Unable to parse or extract variants from response: {response[:200]}...")
 
             if not isinstance(variants, list):
                 raise ValueError("Expected JSON array from mutator")
@@ -510,8 +543,14 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
             if len(variants) == 0:
                 raise ValueError("Mutator returned empty array")
 
-            logger.info(f"Generated {len(variants)} user-specific variants")
-            return variants
+            # Filter out empty or invalid variants
+            valid_variants = [v for v in variants if v and isinstance(v, str) and len(v.strip()) > 10]
+
+            if len(valid_variants) == 0:
+                raise ValueError("No valid variants found in response")
+
+            logger.info(f"Generated {len(valid_variants)} valid user-specific variants")
+            return valid_variants
 
         except Exception as e:
             logger.error(f"User-specific variant generation failed: {e}")
