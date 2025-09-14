@@ -7,7 +7,7 @@ api_keys:
 data_path: "/home/bigdata/align/AutoPI/data"
 
 # LMSYS dataset configuration for user-agnostic testing
-lmsys_dataset_path: "/home/bigdata/align/AutoPI/data/lmsys_queries.json"
+lmsys_dataset_path: "/home/bigdata/align/AutoPI/datalmsys_queries.json"
 
 # User-agnostic validation settings
 user_agnostic:
