@@ -5,3 +5,13 @@ api_keys:
   xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
 
 data_path: "/home/zesen/AutoPI/data"
+
+# LMSYS dataset configuration for user-agnostic testing
+lmsys_dataset_path: "/home/zesen/AutoPI/data/lmsys_queries.json"
+
+# User-agnostic validation settings
+user_agnostic:
+  min_success_rate: 0.8
+  default_test_queries: 5
+  default_max_samples: 100
+  enable_category_testing: true
