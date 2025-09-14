@@ -11,7 +11,7 @@ echo "输出文件: batch_results.json"
 echo ""
 
 # 确保在正确的目录
-cd /home/zesen/AutoPI
+cd /home/bigdata/align/AutoPI
 
 # 运行优化
 python main.py \
@@ -23,7 +23,7 @@ python main.py \
   --max-generations 20 \
   --variants-per-generation 4 \
   --success-threshold 0.8 \
-  --gradient-model "gpt2" \
+  --gradient-model "/data/models/openai-community/gpt2" \
   --target-model "gpt-5" \
   --auxiliary-model "gpt-5" \
   --judge-weight 0.6 \

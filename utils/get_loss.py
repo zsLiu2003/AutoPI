@@ -8,7 +8,7 @@ from typing import List, Tuple, Optional
 # Global model cache to avoid reloading
 _model_cache = {}
 
-def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt: str = None, objective_prompt: str = None, force_cpu: bool = True) -> float:
+def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt: str = None, objective_prompt: str = None, force_cpu: bool = False) -> float:
     """
     Get gradient-based importance scores for each token in the prompt.
 
