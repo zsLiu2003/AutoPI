@@ -15,3 +15,4 @@ user_agnostic:
   default_test_queries: 5
   default_max_samples: 100
   enable_category_testing: true
+  
