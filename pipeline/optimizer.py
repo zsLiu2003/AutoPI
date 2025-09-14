@@ -444,20 +444,85 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
 """
 
             # Use auxiliary model to generate variants
+            logger.info(f"Generating {num_variants} user-specific variants using {self.auxiliary_model}")
             response = self.auxiliary_provider.generate_response(mutator_user_prompt, mutator_system_prompt)
 
+            # Debug logging
+            logger.info(f"Raw LLM response length: {len(response)}")
+            logger.debug(f"Raw LLM response: {response[:500]}...")
+
+            # Clean and parse JSON response
+            response = response.strip()
+
+            # Try to extract JSON from response if it's wrapped in other text
+            if response.startswith("```json"):
+                # Extract JSON from code block
+                start = response.find("[")
+                end = response.rfind("]") + 1
+                if start != -1 and end > start:
+                    response = response[start:end]
+
+            elif response.startswith("```"):
+                # Extract from generic code block
+                lines = response.split('\n')
+                json_lines = []
+                in_json = False
+                for line in lines[1:]:  # Skip first ```
+                    if line.strip() == "```":
+                        break
+                    json_lines.append(line)
+                response = '\n'.join(json_lines).strip()
+
+            # Remove any leading/trailing text that's not JSON
+            if not response.startswith('['):
+                start = response.find('[')
+                if start != -1:
+                    response = response[start:]
+
+            if not response.endswith(']'):
+                end = response.rfind(']')
+                if end != -1:
+                    response = response[:end+1]
+
+            logger.debug(f"Cleaned response: {response}")
+
             # Parse JSON response
-            variants = json.loads(response)
+            try:
+                variants = json.loads(response)
+            except json.JSONDecodeError as json_error:
+                logger.error(f"JSON parsing failed: {json_error}")
+                logger.error(f"Problematic response: {response}")
+
+                # Try to fix common JSON issues
+                response = response.replace("'", '"')  # Replace single quotes
+                response = response.replace('",\n]', '"\n]')  # Remove trailing comma
+                response = response.replace(',\n]', '\n]')  # Remove trailing comma
+
+                try:
+                    variants = json.loads(response)
+                    logger.info("Fixed JSON parsing after cleanup")
+                except json.JSONDecodeError:
+                    raise ValueError(f"Unable to parse JSON response: {response[:200]}...")
+
             if not isinstance(variants, list):
                 raise ValueError("Expected JSON array from mutator")
+
+            if len(variants) == 0:
+                raise ValueError("Mutator returned empty array")
 
             logger.info(f"Generated {len(variants)} user-specific variants")
             return variants
 
         except Exception as e:
             logger.error(f"User-specific variant generation failed: {e}")
+            logger.info(f"Falling back to basic mutations based on seed: {seed_tool_des}")
+
             # Return basic mutations as fallback
-            return [f"{seed_tool_des}_user_specific_variant_{i+1}" for i in range(num_variants)]
+            fallback_variants = []
+            for i in range(num_variants):
+                fallback_variants.append(f"{seed_tool_des} - optimized variant {i+1} for user request")
+
+            return fallback_variants
 
     def _generate_variants_model_agnostic(self, input_data: InputData, seed_tool_des: str,
                                          history: List[Dict], num_variants: int) -> List[str]:
