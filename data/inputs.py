@@ -24,9 +24,9 @@ class InputData:
         
     def inject_tool_description(self, tool_des: str) -> str:
         """Inject tool description into system prompt's <Injected Loaction> tag"""
-        if "<Injected Loaction>" in self.ystem_prompt:
+        if "<Injected Loaction>" in self.system_prompt:
             return self.system_prompt.replace("<Injected Loaction>", tool_des)
-        elif "<injected location>" in self.systsem_prompt:      
+        elif "<injected location>" in self.system_prompt:
             return self.system_prompt.replace("<injected location>", tool_des)
         else:
             # If no injection tag found, append to the end

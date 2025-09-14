@@ -64,5 +64,4 @@ class TestLLMProvider(LLMProvider):
             raise ValueError(f"Unexpected response format: {data}")
 
 def get_llm_provider(model_name: str) -> LLMProvider:
-    """获取LLM provider，目前只支持TestLLMProvider"""
     return TestLLMProvider(model_name)

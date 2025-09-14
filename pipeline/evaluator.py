@@ -19,7 +19,7 @@ class PromptEvaluator(ABC):
 class CombinedEvaluator(PromptEvaluator):
     """Combined evaluator that uses both LLM judge and gradient scoring methods"""
     
-    def __init__(self, judge_model: str = "gpt-4", gradient_model: str = "gpt2", 
+    def __init__(self, judge_model: str = "gpt-5", gradient_model: str = "gpt2", 
                  judge_weight: float = 0.6, gradient_weight: float = 0.4):
         self.judge_model = judge_model
         self.gradient_model = gradient_model

@@ -1,0 +1,63 @@
+[WARNING] 2025-09-14 16:25:52,069 - data.dataset_loader - Local LMSYS dataset not found at /home/zesen/AutoPI/data/lmsys_queries.json, using default queries
+[INFO] 2025-09-14 16:25:52,069 - data.dataset_loader - Using 15 default user queries
+[WARNING] 2025-09-14 16:42:54,549 - data.dataset_loader - Local LMSYS dataset not found at /home/zesen/AutoPI/data/lmsys_queries.json, using default queries
+[INFO] 2025-09-14 16:42:54,549 - data.dataset_loader - Using 15 default user queries
+[INFO] 2025-09-14 16:43:07,449 - __main__ - Starting batch optimization mode for 3 prompts
+[INFO] 2025-09-14 16:43:07,451 - data.dataset_loader - Loading LMSYS Chat-1M dataset from Hugging Face...
+[INFO] 2025-09-14 16:43:11,529 - data.dataset_loader - Sampled 100 conversations from the full dataset
+[INFO] 2025-09-14 16:43:11,563 - data.dataset_loader - Loaded 80 unique user queries from LMSYS Chat-1M dataset
+[INFO] 2025-09-14 16:43:11,575 - __main__ - Running batch optimization for 3 user prompts
+[ERROR] 2025-09-14 16:43:11,577 - __main__ - Failed to load system prompt from cline.txt
+[ERROR] 2025-09-14 16:43:11,577 - __main__ - Batch optimization failed - no results generated
+[INFO] 2025-09-14 16:44:34,321 - __main__ - Starting batch optimization mode for 3 prompts
+[INFO] 2025-09-14 16:44:34,323 - data.dataset_loader - Loading LMSYS Chat-1M dataset from Hugging Face...
+[INFO] 2025-09-14 16:44:38,319 - data.dataset_loader - Sampled 100 conversations from the full dataset
+[INFO] 2025-09-14 16:44:38,354 - data.dataset_loader - Loaded 80 unique user queries from LMSYS Chat-1M dataset
+[INFO] 2025-09-14 16:44:38,366 - __main__ - Running batch optimization for 3 user prompts
+[INFO] 2025-09-14 16:44:38,370 - data.dataset_loader - Loading LMSYS Chat-1M dataset from Hugging Face...
+[INFO] 2025-09-14 16:44:40,588 - data.dataset_loader - Sampled 100 conversations from the full dataset
+[INFO] 2025-09-14 16:44:40,629 - data.dataset_loader - Loaded 80 unique user queries from LMSYS Chat-1M dataset
+[INFO] 2025-09-14 16:44:40,646 - __main__ - Processing prompt 1/3: Write an article about the Production Process of N...
+[INFO] 2025-09-14 16:44:40,646 - pipeline.optimizer - Starting user_specific optimization
+[INFO] 2025-09-14 16:44:40,646 - pipeline.optimizer - Starting user-specific optimization, max 1 generations, 2 variants per generation
+[INFO] 2025-09-14 16:44:40,646 - pipeline.optimizer - Generation 1/1
+[ERROR] 2025-09-14 16:45:12,216 - pipeline.optimizer - User-specific variant generation failed: HTTPSConnectionPool(host='api.cxhao.com', port=443): Read timed out. (read timeout=30)
+[ERROR] 2025-09-14 16:45:12,217 - pipeline.optimizer - Variant testing failed: 'InputData' object has no attribute 'ystem_prompt'
+[INFO] 2025-09-14 16:49:35,723 - __main__ - Starting batch optimization mode for 10 prompts
+[INFO] 2025-09-14 16:49:35,725 - data.dataset_loader - Loading LMSYS Chat-1M dataset from Hugging Face...
+[INFO] 2025-09-14 16:49:39,881 - data.dataset_loader - Sampled 100 conversations from the full dataset
+[INFO] 2025-09-14 16:49:39,916 - data.dataset_loader - Loaded 80 unique user queries from LMSYS Chat-1M dataset
+[INFO] 2025-09-14 16:49:39,928 - __main__ - Running batch optimization for 10 user prompts
+[INFO] 2025-09-14 16:49:39,933 - data.dataset_loader - Loading LMSYS Chat-1M dataset from Hugging Face...
+[INFO] 2025-09-14 16:49:42,193 - data.dataset_loader - Sampled 100 conversations from the full dataset
+[INFO] 2025-09-14 16:49:42,233 - data.dataset_loader - Loaded 80 unique user queries from LMSYS Chat-1M dataset
+[INFO] 2025-09-14 16:49:42,250 - __main__ - Processing prompt 1/10: Write a cover letter for a master' in management. ...
+[INFO] 2025-09-14 16:49:42,250 - pipeline.optimizer - Starting user_specific optimization
+[INFO] 2025-09-14 16:49:42,250 - pipeline.optimizer - Starting user-specific optimization, max 20 generations, 4 variants per generation
+[INFO] 2025-09-14 16:49:42,250 - pipeline.optimizer - Generation 1/20
+[ERROR] 2025-09-14 16:49:49,994 - pipeline.optimizer - User-specific variant generation failed: Expecting value: line 1 column 1 (char 0)
+[INFO] 2025-09-14 16:50:09,095 - pipeline.optimizer - Agent response length: 4446
+[ERROR] 2025-09-14 16:51:12,460 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:51:12,483 - pipeline.optimizer - Variant score: 0.620 (Judge: 0.700, Gradient: 0.000)
+[INFO] 2025-09-14 16:51:26,923 - pipeline.optimizer - Agent response length: 4027
+[ERROR] 2025-09-14 16:51:38,190 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:51:38,211 - pipeline.optimizer - Variant score: 0.620 (Judge: 0.700, Gradient: 0.000)
+[INFO] 2025-09-14 16:51:50,954 - pipeline.optimizer - Agent response length: 3090
+[ERROR] 2025-09-14 16:52:03,227 - pipeline.evaluator - LLM judge evaluation failed: could not convert string to float: '> *Thought for a few seconds*\n\n0.1'
+[ERROR] 2025-09-14 16:52:04,921 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:52:04,943 - pipeline.optimizer - Variant score: 0.200 (Judge: 0.000, Gradient: 0.000)
+[INFO] 2025-09-14 16:52:22,849 - pipeline.optimizer - Agent response length: 4375
+[ERROR] 2025-09-14 16:52:28,966 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:52:28,987 - pipeline.optimizer - Variant score: 0.500 (Judge: 0.500, Gradient: 0.000)
+[INFO] 2025-09-14 16:52:28,988 - pipeline.optimizer - Generation 1 best score: 0.620
+[INFO] 2025-09-14 16:52:28,988 - pipeline.optimizer - Generation 2/20
+[ERROR] 2025-09-14 16:52:38,118 - pipeline.optimizer - User-specific variant generation failed: Expecting value: line 1 column 1 (char 0)
+[INFO] 2025-09-14 16:52:57,275 - pipeline.optimizer - Agent response length: 4154
+[ERROR] 2025-09-14 16:53:09,611 - pipeline.evaluator - LLM judge evaluation failed: could not convert string to float: '> *Thought for a couple of seconds*\n\n0.5'
+[ERROR] 2025-09-14 16:53:11,302 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:53:11,322 - pipeline.optimizer - Variant score: 0.200 (Judge: 0.000, Gradient: 0.000)
+[INFO] 2025-09-14 16:53:26,437 - pipeline.optimizer - Agent response length: 3394
+[ERROR] 2025-09-14 16:53:52,372 - pipeline.evaluator - LLM judge evaluation failed: could not convert string to float: '> *Thought for 16s*\n\n0.1'
+[ERROR] 2025-09-14 16:53:54,055 - pipeline.evaluator - Gradient evaluation failed: index out of range in self
+[INFO] 2025-09-14 16:53:54,077 - pipeline.optimizer - Variant score: 0.200 (Judge: 0.000, Gradient: 0.000)
+[INFO] 2025-09-14 16:54:09,269 - pipeline.optimizer - Agent response length: 2783
