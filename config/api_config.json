@@ -19,7 +19,7 @@
     "n": 1,
     "stream": false,
     "stop": null,
-    "max_tokens": 2048,
+    "max_tokens": 8192,
     "presence_penalty": 0,
     "frequency_penalty": 0,
     "logit_bias": {},
