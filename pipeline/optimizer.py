@@ -20,10 +20,11 @@ class PromptOptimizer:
 
     def __init__(self, evaluator: CombinedEvaluator = None, executor: CommandExecutor = None,
                  target_model: str = "gpt-5", auxiliary_model: str = "gpt-4", gradient_model: str = "gpt2",
-                 use_huggingface: bool = True, max_samples: int = 100):
+                 use_huggingface: bool = True, max_samples: int = 100, skip_gradient: bool = False):
         self.evaluator = evaluator or CombinedEvaluator(
             judge_model=auxiliary_model,
-            gradient_model=gradient_model
+            gradient_model=gradient_model,
+            skip_gradient=skip_gradient
         )
         self.executor = executor or CommandExecutor()
         self.target_model = target_model        # Model for target agent being tested

@@ -99,7 +99,8 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
             auxiliary_model=args.auxiliary_model,
             gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
-            max_samples=args.max_samples
+            max_samples=args.max_samples,
+            skip_gradient=args.skip_gradient
         )
 
         # Set up models and weights
@@ -226,7 +227,8 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             auxiliary_model=args.auxiliary_model,
             gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
-            max_samples=args.max_samples
+            max_samples=args.max_samples,
+            skip_gradient=args.skip_gradient
         )
 
         # Set up models and weights
@@ -396,7 +398,9 @@ Examples:
                        help='Weight for LLM judge score (default: 0.6)')
     parser.add_argument('--gradient-weight', type=float, default=0.4,
                        help='Weight for gradient score (default: 0.4)')
-    
+    parser.add_argument('--skip-gradient', action='store_true',
+                       help='Skip gradient calculation entirely (only use LLM judge)')
+
     # Output options
     parser.add_argument('--output', type=str,
                        help='Path to save optimization results')

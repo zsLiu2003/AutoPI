@@ -19,25 +19,31 @@ class PromptEvaluator(ABC):
 class CombinedEvaluator(PromptEvaluator):
     """Combined evaluator that uses both LLM judge and gradient scoring methods"""
     
-    def __init__(self, judge_model: str = "gpt-5", gradient_model: str = "gpt2", 
-                 judge_weight: float = 0.6, gradient_weight: float = 0.4):
+    def __init__(self, judge_model: str = "gpt-5", gradient_model: str = "gpt2",
+                 judge_weight: float = 0.6, gradient_weight: float = 0.4, skip_gradient: bool = False):
         self.judge_model = judge_model
         self.gradient_model = gradient_model
         self.judge_weight = judge_weight
         self.gradient_weight = gradient_weight
+        self.skip_gradient = skip_gradient
         self.llm_provider = get_llm_provider(judge_model)
         
     def evaluate(self, input_data: InputData) -> float:
         """Combine LLM judge and gradient scoring"""
         judge_score = self.get_llm_judge_score(input_data)
+
+        if self.skip_gradient:
+            logger.info(f"Judge: {judge_score}, Gradient: SKIPPED, Combined: {judge_score}")
+            return judge_score
+
         gradient_score = self.get_gradient_score(input_data)
-        
+
         # Normalize gradient score (convert to 0-1 range)
         normalized_gradient = max(0, min(1, (gradient_score + 10) / 20))  # Assume gradient range is -10 to 10
-        
-        combined_score = (self.judge_weight * judge_score + 
+
+        combined_score = (self.judge_weight * judge_score +
                          self.gradient_weight * normalized_gradient)
-        
+
         logger.info(f"Judge: {judge_score}, Gradient: {gradient_score}, Combined: {combined_score}")
         return combined_score
     
@@ -188,14 +194,18 @@ CRITICAL: Return ONLY a decimal number between 0.0 and 1.0. Do not include any e
         
         # Get LLM judge score
         variant_data.llm_judge_score = self.get_llm_judge_score(temp_input)
-        
-        # Get gradient score
-        variant_data.gradient_score = self.get_gradient_score(temp_input)
 
-        # Calculate combined score - 简化计算逻辑
-        # gradient_score已经在[0,1]范围内，无需额外归一化
-        variant_data.combined_score = (self.judge_weight * variant_data.llm_judge_score +
-                                     self.gradient_weight * variant_data.gradient_score)
+        if self.skip_gradient:
+            # Skip gradient calculation
+            variant_data.gradient_score = 0.0
+            variant_data.combined_score = variant_data.llm_judge_score
+        else:
+            # Get gradient score
+            variant_data.gradient_score = self.get_gradient_score(temp_input)
+            # Calculate combined score - 简化计算逻辑
+            # gradient_score已经在[0,1]范围内，无需额外归一化
+            variant_data.combined_score = (self.judge_weight * variant_data.llm_judge_score +
+                                         self.gradient_weight * variant_data.gradient_score)
         
         # Determine success (threshold adjustable)
         variant_data.success = variant_data.combined_score > 0.8
