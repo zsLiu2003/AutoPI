@@ -50,7 +50,7 @@ class TestLLMProvider(LLMProvider):
             "temperature": 0.7,
             "top_p": 0.9,
             "top_k": 50,
-            "max_tokens": 1024,
+            "max_tokens": 4096,
         }
         payload.update(kwargs)
 

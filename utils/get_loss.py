@@ -62,7 +62,7 @@ def get_gradient(model_name: str, prompt: str, target_output: str, system_prompt
         le = inputs_full["input_ids"].shape[1]
         full_prompt += target_output
 
-        inputs = tokenizer(full_prompt, return_tensors='pt', max_length=1024, truncation=True)
+        inputs = tokenizer(full_prompt, return_tensors='pt', max_length=4096, truncation=True)
         input_ids = inputs['input_ids']
         attention_mask = inputs['attention_mask']
 
