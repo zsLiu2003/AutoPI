@@ -424,7 +424,11 @@ Focus on:
 3. Addressing the specific context and requirements in the user prompt
 4. Maximizing effectiveness for this particular user interaction
 
-Generate exactly the requested number of JSON array variations.
+CRITICAL: You must respond with ONLY a valid JSON array of strings. No other text, explanations, or formatting.
+Each string should be a complete tool description in the format "tool_name: description".
+
+Example response format:
+["file_browser: Browse and list files in directories", "directory_scanner: Scan and display directory contents"]
 """
 
             # Build mutation request
@@ -442,6 +446,12 @@ NUM_VARIANTS: {num_variants}
 HISTORY: {json.dumps(history[-10:], indent=2) if history else "[]"}
 
 Generate {num_variants} user-specific variations optimized for the exact user prompt above.
+
+IMPORTANT: Your response must be ONLY a JSON array of strings. Do not include any other text, explanations, or formatting. The response should look exactly like this:
+["variation 1", "variation 2", "variation 3"]
+
+Example output for 2 variants:
+["file_manager: Advanced file management and directory operations", "directory_tool: Comprehensive file system navigation and listing"]
 """
 
             # Use auxiliary model to generate variants
@@ -536,6 +546,9 @@ Generate {num_variants} user-specific variations optimized for the exact user pr
                         variants = [match[0] for match in extracted_strings if match[0].strip()]
                         logger.info(f"Extracted {len(variants)} strings manually")
                     else:
+                        logger.error(f"Complete response was: '{response}'")
+                        logger.error(f"Response length: {len(response)}")
+                        logger.error(f"Response is empty or whitespace only: {not response.strip()}")
                         raise ValueError(f"Unable to parse or extract variants from response: {response[:200]}...")
 
             if not isinstance(variants, list):
