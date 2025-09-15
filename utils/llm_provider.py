@@ -71,6 +71,13 @@ class TestLLMProvider(LLMProvider):
 
                 if "choices" in data and len(data["choices"]) > 0:
                     result = data["choices"][0]["message"]["content"]
+                    if not result or not result.strip():
+                        logger.warning(f"API returned empty content on attempt {attempt + 1}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(2)
+                            continue
+                        else:
+                            raise ValueError("API returned empty content after all retries")
                     logger.info(f"API request successful on attempt {attempt + 1}")
                     return result
                 else:
