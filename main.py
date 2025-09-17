@@ -86,7 +86,7 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
         logger.info(f"Running batch optimization for {len(user_prompts)} user prompts")
 
         # Load configuration and system prompt once
-        config = load_config()
+        config = load_config(args.config)
         system_prompt, expected_output = get_system_prompt("cline", config)
 
         if not system_prompt:
@@ -199,10 +199,10 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
         return []
 
 def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, args) -> bool:
-    """Run the optimization process"""
+    """Run single optimization"""
     try:
         # Load configuration
-        config = load_config()
+        config = load_config(args.config)
 
         # Load system prompt using existing function
         system_prompt, expected_output = get_system_prompt("cline", config)
@@ -337,6 +337,10 @@ Examples:
   python main.py --target-command "cat file.txt" --seed-tool "file_reader: Read file contents" --strategy model_agnostic --batch-mode --batch-size 25 --test-models gpt-4 gemini-pro --judge-weight 0.7 --gradient-weight 0.3
         """
     )
+    
+    # Configuration file
+    parser.add_argument('--config', type=str, default='config.yaml',
+                       help='Path to configuration file (default: config.yaml)')
     
     # Required parameters
     parser.add_argument('--target-command', type=str, required=True,
