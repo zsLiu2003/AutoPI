@@ -1,0 +1,10 @@
+lmy_config.yaml
+
+__pycache__/
+
+logs/
+
+*.log
+
+*config.yaml
+lmy_run_command.sh

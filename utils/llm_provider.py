@@ -4,6 +4,7 @@ import os
 import requests
 import json
 import time
+from datetime import datetime
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,8 +25,9 @@ class LLMProvider(ABC):
         pass
 
 class TestLLMProvider(LLMProvider):
-    def __init__(self, model_name: str = 'gpt-5', max_retries: int = 3, timeout: int = 60):
+    def __init__(self, model_name: str = 'gpt-5', max_retries: int = 3, timeout: int = 60, model_type: str = "unknown"):
         self.model_name = model_name
+        self.model_type = model_type  # 模型类型：target, auxiliary, gradient等
         self.api_url = f"{BASE_URL}{ENDPOINT}"
         self.max_retries = max_retries
         self.timeout = timeout
@@ -36,6 +38,31 @@ class TestLLMProvider(LLMProvider):
             "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
             "Content-Type": "application/json"
         }
+        
+        # 创建日志目录
+        self.log_dir = "logs/api_interactions"
+        os.makedirs(self.log_dir, exist_ok=True)
+        
+        # 根据模型类型创建不同的日志文件
+        self.log_file = os.path.join(self.log_dir, f"{self.model_type}_{self.model_name}.jsonl")
+
+    def _log_interaction(self, request_data: dict, response_data: dict, success: bool, error: str = None):
+        """记录API交互到JSONL文件"""
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "model_name": self.model_name,
+            "model_type": self.model_type,
+            "request": request_data,
+            "response": response_data,
+            "success": success,
+            "error": error
+        }
+        
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+        except Exception as e:
+            logger.warning(f"Failed to log interaction: {e}")
 
     def generate_response(self, user_prompt: str, system_prompt: str = None, **kwargs):
         if system_prompt is None:
@@ -77,10 +104,16 @@ class TestLLMProvider(LLMProvider):
                             time.sleep(2)
                             continue
                         else:
+                            # 记录失败的交互
+                            self._log_interaction(payload, data, False, "API returned empty content after all retries")
                             raise ValueError("API returned empty content after all retries")
                     logger.info(f"API request successful on attempt {attempt + 1}")
+                    # 记录成功的交互
+                    self._log_interaction(payload, data, True)
                     return result
                 else:
+                    # 记录失败的交互
+                    self._log_interaction(payload, data, False, f"Unexpected response format: {data}")
                     raise ValueError(f"Unexpected response format: {data}")
 
             except requests.exceptions.Timeout as e:
@@ -91,7 +124,9 @@ class TestLLMProvider(LLMProvider):
                     time.sleep(wait_time)
                 else:
                     logger.error(f"API request failed after {self.max_retries} attempts due to timeout")
-                    raise
+                    # 记录超时失败的交互
+                    self._log_interaction(payload, {}, False, f"Timeout after {self.max_retries} attempts: {e}")
+                    raise e
 
             except requests.exceptions.RequestException as e:
                 logger.warning(f"API request error on attempt {attempt + 1}/{self.max_retries}: {e}")
@@ -101,6 +136,8 @@ class TestLLMProvider(LLMProvider):
                     time.sleep(wait_time)
                 else:
                     logger.error(f"API request failed after {self.max_retries} attempts due to request error")
+                    # 记录请求错误的交互
+                    self._log_interaction(payload, {}, False, f"Request error after {self.max_retries} attempts: {e}")
                     raise
 
             except Exception as e:
@@ -108,15 +145,17 @@ class TestLLMProvider(LLMProvider):
                 if attempt < self.max_retries - 1:
                     time.sleep(1)
                 else:
+                    # 记录意外错误的交互
+                    self._log_interaction(payload, {}, False, f"Unexpected error after {self.max_retries} attempts: {e}")
                     raise
 
         # 如果所有重试都失败，抛出最后的异常
-        raise Exception(f"Failed to get response after {self.max_retries} attempts")
+        raise Exception(f"All {self.max_retries} attempts failed")
 
-def get_llm_provider(model_name: str) -> LLMProvider:
+def get_llm_provider(model_name: str, model_type: str = "unknown") -> LLMProvider:
     # 根据模型使用情况调整超时和重试参数
     if model_name in ["gpt-4", "gpt-5"]:
         # 对于较大的模型使用更长的超时时间
-        return TestLLMProvider(model_name, max_retries=3, timeout=90)
+        return TestLLMProvider(model_name, max_retries=3, timeout=300, model_type=model_type)
     else:
-        return TestLLMProvider(model_name, max_retries=3, timeout=60)
+        return TestLLMProvider(model_name, max_retries=3, timeout=300, model_type=model_type)
