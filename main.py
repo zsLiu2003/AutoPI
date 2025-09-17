@@ -97,15 +97,18 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
         optimizer = PromptOptimizer(
             target_model=args.target_model,
             auxiliary_model=args.auxiliary_model,
+            judge_model=args.judge_model,
             gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
-            skip_gradient=args.skip_gradient
+            skip_gradient=args.skip_gradient,
+            config=config
         )
 
         # Set up models and weights
         optimizer.set_target_agent(args.target_model)
         optimizer.set_auxiliary_model(args.auxiliary_model)
+        optimizer.set_judge_model(args.judge_model)
         optimizer.set_gradient_model(args.gradient_model)
 
         # Update evaluator weights
@@ -126,7 +129,8 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
                     expected_output_prompt=expected_output or "Command executed successfully",
                     assistant_prompt="",
                     seed_tool_des=seed_tool_des,
-                    target_command=target_command
+                    target_command=target_command,
+                    tool_name=args.tool_name
                 )
 
                 # Determine optimization strategy and parameters
@@ -218,22 +222,26 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             expected_output_prompt=expected_output or "Command executed successfully",
             assistant_prompt="",
             seed_tool_des=seed_tool_des,
-            target_command=target_command
+            target_command=target_command,
+            tool_name=args.tool_name
         )
 
         # Initialize components with separated models
         optimizer = PromptOptimizer(
             target_model=args.target_model,
             auxiliary_model=args.auxiliary_model,
+            judge_model=args.judge_model,
             gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
-            skip_gradient=args.skip_gradient
+            skip_gradient=args.skip_gradient,
+            config=config
         )
 
         # Set up models and weights
         optimizer.set_target_agent(args.target_model)
         optimizer.set_auxiliary_model(args.auxiliary_model)
+        optimizer.set_judge_model(args.judge_model)
         optimizer.set_gradient_model(args.gradient_model)
 
         # Update evaluator weights
@@ -331,10 +339,10 @@ Examples:
   python main.py --target-command "pwd" --seed-tool "location_tool: Show current directory" --strategy user_agnostic --enable-user-agnostic-validation --use-huggingface=False --lmsys-dataset-path "./my_queries.json"
 
   # Different model configurations with model-agnostic optimization
-  python main.py --target-command "ls" --seed-tool "file_tool: List files" --strategy model_agnostic --target-model gpt-5 --auxiliary-model gpt-4 --gradient-model gpt2 --test-models gpt-4 claude-3-sonnet gemini-pro
+  python main.py --target-command "ls" --seed-tool "file_tool: List files" --strategy model_agnostic --target-model gpt-5 --auxiliary-model gpt-4 --judge-model claude-3-sonnet --gradient-model gpt2 --test-models gpt-4 claude-3-sonnet gemini-pro
 
   # Batch model-agnostic optimization with custom settings
-  python main.py --target-command "cat file.txt" --seed-tool "file_reader: Read file contents" --strategy model_agnostic --batch-mode --batch-size 25 --test-models gpt-4 gemini-pro --judge-weight 0.7 --gradient-weight 0.3
+  python main.py --target-command "cat file.txt" --seed-tool "file_reader: Read file contents" --strategy model_agnostic --batch-mode --batch-size 25 --test-models gpt-4 gemini-pro --judge-model gpt-4 --auxiliary-model gpt-5 --judge-weight 0.7 --gradient-weight 0.3
         """
     )
     
@@ -347,6 +355,8 @@ Examples:
                        help='Target command to execute (e.g., "rm", "ls", "pwd")')
     parser.add_argument('--seed-tool', type=str, required=True,
                        help='Initial seed tool description to evolve from')
+    parser.add_argument('--tool-name', type=str, default='diagnostic_tool',
+                       help='Name for the tool in XML template (default: diagnostic_tool)')
     
     # Batch processing
     parser.add_argument('--batch-mode', action='store_true',
@@ -393,7 +403,9 @@ Examples:
     parser.add_argument('--target-model', type=str, default='gpt-5',
                        help='Target agent model being tested (default: gpt-5)')
     parser.add_argument('--auxiliary-model', type=str, default='gpt-5',
-                       help='Auxiliary model for mutation generation and LLM judge (default: gpt-5)')
+                       help='Auxiliary model for mutation generation (default: gpt-5)')
+    parser.add_argument('--judge-model', type=str, default='gpt-4',
+                       help='Judge model for LLM evaluation (default: gpt-4)')
     parser.add_argument('--gradient-model', type=str, default='gpt2',
                        help='Gradient/loss calculation model (default: gpt2)')
     
@@ -402,8 +414,8 @@ Examples:
                        help='Weight for LLM judge score (default: 0.6)')
     parser.add_argument('--gradient-weight', type=float, default=0.4,
                        help='Weight for gradient score (default: 0.4)')
-    parser.add_argument('--skip-gradient', action='store_true',
-                       help='Skip gradient calculation entirely (only use LLM judge)')
+    parser.add_argument('--skip-gradient', action='store_true', default=True,
+                       help='Skip gradient calculation entirely (only use LLM judge) (default: True)')
 
     # Output options
     parser.add_argument('--output', type=str,
