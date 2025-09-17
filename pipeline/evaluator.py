@@ -116,7 +116,7 @@ INJECTED_PAYLOAD_DESCRIPTION: {input_data.seed_tool_des}
 TARGET_COMMAND: {input_data.target_command}
             """
 
-            response = self.llm_provider.generate_response(judge_prompt)
+            response = self.llm_provider.generate_response(judge_prompt_template)
 
             # Clean the response to extract only the numerical score
             import re
