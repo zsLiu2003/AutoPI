@@ -38,16 +38,16 @@ class PromptOptimizer:
         """Set the target agent model"""
         if model_name:
             self.target_model = model_name
-        self.target_agent_provider = get_llm_provider(self.target_model)
+        self.target_agent_provider = get_llm_provider(self.target_model, "target")
 
     def set_auxiliary_model(self, model_name: str = None):
         """Set the auxiliary model for mutation and judge"""
         if model_name:
             self.auxiliary_model = model_name
-        self.auxiliary_provider = get_llm_provider(self.auxiliary_model)
+        self.auxiliary_provider = get_llm_provider(self.auxiliary_model, "auxiliary")
         # Update evaluator's judge model
         self.evaluator.judge_model = self.auxiliary_model
-        self.evaluator.llm_provider = get_llm_provider(self.auxiliary_model)
+        self.evaluator.llm_provider = get_llm_provider(self.auxiliary_model, "judge")
 
     def set_gradient_model(self, model_name: str = None):
         """Set the gradient model for loss calculation"""
@@ -684,7 +684,7 @@ Generate {num_variants} model-agnostic variations that work consistently across 
         for model in test_models:
             try:
                 # Get provider for this model
-                model_provider = get_llm_provider(model)
+                model_provider = get_llm_provider(model, "variant_test")
 
                 # Inject tool description into system prompt
                 injected_system_prompt = input_data.inject_tool_description(tool_description)
