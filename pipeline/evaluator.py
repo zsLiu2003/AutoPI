@@ -26,7 +26,7 @@ class CombinedEvaluator(PromptEvaluator):
         self.judge_weight = judge_weight
         self.gradient_weight = gradient_weight
         self.skip_gradient = skip_gradient
-        self.llm_provider = get_llm_provider(judge_model)
+        self.llm_provider = get_llm_provider(judge_model, "judge")
         
     def evaluate(self, input_data: InputData) -> float:
         """Combine LLM judge and gradient scoring"""

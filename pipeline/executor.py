@@ -61,7 +61,7 @@ class CommandExecutor:
             user_prompt = self._format_model_agnostic_prompt(input_data, history or [])
             
             # Get LLM provider
-            provider = get_llm_provider("gpt-4")
+            provider = get_llm_provider("gpt-4", "executor")
             
             # Generate response
             response = provider.generate_response(user_prompt, system_prompt)
