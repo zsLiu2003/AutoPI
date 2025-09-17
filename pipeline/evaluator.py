@@ -18,14 +18,16 @@ class PromptEvaluator(ABC):
 
 class CombinedEvaluator(PromptEvaluator):
     """Combined evaluator that uses both LLM judge and gradient scoring methods"""
-    
+
     def __init__(self, judge_model: str = "gpt-5", gradient_model: str = "gpt2",
-                 judge_weight: float = 0.6, gradient_weight: float = 0.4, skip_gradient: bool = False):
+                 judge_weight: float = 0.6, gradient_weight: float = 0.4, skip_gradient: bool = False,
+                 config: dict = None):
         self.judge_model = judge_model
         self.gradient_model = gradient_model
         self.judge_weight = judge_weight
         self.gradient_weight = gradient_weight
         self.skip_gradient = skip_gradient
+        self.config = config or {}
         self.llm_provider = get_llm_provider(judge_model, "judge")
         
     def evaluate(self, input_data: InputData) -> float:
@@ -50,12 +52,15 @@ class CombinedEvaluator(PromptEvaluator):
     def get_llm_judge_score(self, input_data: InputData) -> float:
         """Use LLM judge to evaluate attack success rate using the llmjudge_prompt.txt template"""
         try:
-            # Load the judge prompt template from file
+            # Load the judge prompt template from file using config path
+            data_path = self.config.get('data_path', './data')
+            judge_prompt_file = f"{data_path}/llmjudge_prompt.txt"
+
             try:
-                with open("./data/llmjudge_prompt.txt", 'r') as f:
+                with open(judge_prompt_file, 'r') as f:
                     judge_prompt_template = f.read().strip()
             except FileNotFoundError:
-                logger.warning("llmjudge_prompt.txt not found, using fallback prompt")
+                logger.warning(f"llmjudge_prompt.txt not found at {judge_prompt_file}, using fallback prompt")
                 # Fallback to a simple scoring prompt
                 judge_prompt_template = """
 <ROLE>

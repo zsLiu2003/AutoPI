@@ -8,6 +8,8 @@ from pipeline.executor import CommandExecutor
 from utils.llm_provider import get_llm_provider
 from utils.logger import get_logger
 import json
+import os
+from datetime import datetime
 
 logger = get_logger(__name__)
 
@@ -19,20 +21,51 @@ class PromptOptimizer:
     """
 
     def __init__(self, evaluator: CombinedEvaluator = None, executor: CommandExecutor = None,
-                 target_model: str = "gpt-5", auxiliary_model: str = "gpt-4", gradient_model: str = "gpt2",
-                 use_huggingface: bool = True, max_samples: int = 100, skip_gradient: bool = False):
+                 target_model: str = "gpt-5", auxiliary_model: str = "gpt-4", judge_model: str = "gpt-4",
+                 gradient_model: str = "gpt2", use_huggingface: bool = True, max_samples: int = 100,
+                 skip_gradient: bool = False, config: dict = None):
+        self.config = config or {}
         self.evaluator = evaluator or CombinedEvaluator(
-            judge_model=auxiliary_model,
+            judge_model=judge_model,
             gradient_model=gradient_model,
-            skip_gradient=skip_gradient
+            skip_gradient=skip_gradient,
+            config=self.config
         )
         self.executor = executor or CommandExecutor()
         self.target_model = target_model        # Model for target agent being tested
-        self.auxiliary_model = auxiliary_model  # Model for mutation generation and LLM judge
+        self.auxiliary_model = auxiliary_model  # Model for mutation generation
+        self.judge_model = judge_model          # Model for LLM judge evaluation
         self.gradient_model = gradient_model    # Model for gradient/loss calculation
         self.target_agent_provider = None      # LLM provider for simulating target agent
         self.auxiliary_provider = None         # LLM provider for auxiliary tasks
         self.dataset_loader = LMSYSDatasetLoader(use_huggingface=use_huggingface, max_samples=max_samples)  # LMSYS dataset loader
+
+        # 创建变体日志目录
+        self.variant_log_dir = "logs/variants"
+        os.makedirs(self.variant_log_dir, exist_ok=True)
+
+    def _log_variants(self, variants: List[str], generation: int, strategy: str = "user_specific"):
+        """保存生成的变体到日志文件"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_filename = f"{strategy}_gen{generation}_{timestamp}.json"
+            log_path = os.path.join(self.variant_log_dir, log_filename)
+
+            log_data = {
+                "timestamp": timestamp,
+                "generation": generation,
+                "strategy": strategy,
+                "auxiliary_model": self.auxiliary_model,
+                "variants_count": len(variants),
+                "variants": variants
+            }
+
+            with open(log_path, 'w', encoding='utf-8') as f:
+                json.dump(log_data, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"Saved {len(variants)} variants to {log_path}")
+        except Exception as e:
+            logger.error(f"Failed to log variants: {e}")
 
     def set_target_agent(self, model_name: str = None):
         """Set the target agent model"""
@@ -41,13 +74,18 @@ class PromptOptimizer:
         self.target_agent_provider = get_llm_provider(self.target_model, "target")
 
     def set_auxiliary_model(self, model_name: str = None):
-        """Set the auxiliary model for mutation and judge"""
+        """Set the auxiliary model for mutation generation"""
         if model_name:
             self.auxiliary_model = model_name
         self.auxiliary_provider = get_llm_provider(self.auxiliary_model, "auxiliary")
+
+    def set_judge_model(self, model_name: str = None):
+        """Set the judge model for LLM evaluation"""
+        if model_name:
+            self.judge_model = model_name
         # Update evaluator's judge model
-        self.evaluator.judge_model = self.auxiliary_model
-        self.evaluator.llm_provider = get_llm_provider(self.auxiliary_model, "judge")
+        self.evaluator.judge_model = self.judge_model
+        self.evaluator.llm_provider = get_llm_provider(self.judge_model, "judge")
 
     def set_gradient_model(self, model_name: str = None):
         """Set the gradient model for loss calculation"""
@@ -85,6 +123,9 @@ class PromptOptimizer:
 
             # 1. Generate variant mutations using user-specific prompt
             variants = self._generate_variants_user_specific(input_data, current_seed, history, variants_per_generation)
+
+            # 保存变体到日志文件
+            self._log_variants(variants, generation + 1, "user_specific")
 
             # 2. Test each variant with the specific user prompt
             tested_variants = []
@@ -186,6 +227,9 @@ class PromptOptimizer:
             # 1. Generate variant mutations
             variants = self._generate_variants(input_data, current_seed, history, variants_per_generation)
 
+            # 保存变体到日志文件
+            self._log_variants(variants, generation + 1, "user_agnostic")
+
             # 2. Initial single-user testing
             tested_variants = []
             for variant in variants:
@@ -279,6 +323,9 @@ class PromptOptimizer:
             # 1. Generate variant mutations
             variants = self._generate_variants(input_data, current_seed, history, variants_per_generation)
 
+            # 保存变体到日志文件
+            self._log_variants(variants, generation + 1, "user_agnostic")
+
             # 2. Test each variant
             tested_variants = []
             for variant in variants:
@@ -347,6 +394,9 @@ class PromptOptimizer:
             # 1. Generate variant mutations using model-agnostic prompt
             variants = self._generate_variants_model_agnostic(input_data, current_seed, history, variants_per_generation)
 
+            # 保存变体到日志文件
+            self._log_variants(variants, generation + 1, "model_agnostic")
+
             # 2. Test each variant across multiple models
             tested_variants = []
             for variant in variants:
@@ -409,8 +459,9 @@ class PromptOptimizer:
         """Generate mutations using user-specific prompt"""
         try:
             # Load user-specific system prompt
+            data_path = self.config.get('data_path', './data')
             try:
-                with open(f"{self.executor.config.get('data_path', './data')}/user_specific_instruction_prompt.txt", 'r') as f:
+                with open(f"{data_path}/user_specific_instruction_prompt.txt", 'r') as f:
                     mutator_system_prompt = f.read().strip()
             except FileNotFoundError:
                 # Fallback to inline user-specific prompt
@@ -570,8 +621,9 @@ Example response format:
         """Generate mutations using model-agnostic prompt"""
         try:
             # Load model-agnostic system prompt
+            data_path = self.config.get('data_path', './data')
             try:
-                with open(f"{self.executor.config.get('data_path', './data')}/model_agnostic_instruction_prompt.txt", 'r') as f:
+                with open(f"{data_path}/model_agnostic_instruction_prompt.txt", 'r') as f:
                     mutator_system_prompt = f.read().strip()
             except FileNotFoundError:
                 # Fallback to inline model-agnostic prompt
@@ -626,7 +678,8 @@ Generate {num_variants} model-agnostic variations that work consistently across 
         """Generate mutations using user-agnostic prompt"""
         try:
             # Load user-agnostic system prompt
-            with open(f"{self.executor.config.get('data_path', './data')}/user_agnostic_instruction_prompt.txt", 'r') as f:
+            data_path = self.config.get('data_path', './data')
+            with open(f"{data_path}/user_agnostic_instruction_prompt.txt", 'r') as f:
                 mutator_system_prompt = f.read().strip()
 
             # Build mutation request
