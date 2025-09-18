@@ -16,3 +16,4 @@ config/__pycache__
 data/__pycache__
 
 autopi.log
+data/autopi.log
