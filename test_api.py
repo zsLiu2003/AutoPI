@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 def test_api():
     """Test basic API functionality"""
     try:
-        provider = get_llm_provider("gpt-5")
+        provider = get_llm_provider("gpt-5", "test")
 
         system_prompt = "You are a helpful assistant. Always respond with exactly what the user asks for."
         user_prompt = "Please respond with exactly this text: 'API test successful'"
