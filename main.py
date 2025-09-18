@@ -315,35 +315,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="AutoPI - Automated Prompt Injection Optimization System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # User-specific optimization (针对特定用户提示优化，默认策略)
-  python main.py --target-command "ls -la" --seed-tool "file_browser: Browse and list files" --strategy user_specific
-
-  # User-specific batch optimization using dataset prompts
-  python main.py --target-command "ls -la" --seed-tool "file_browser: Browse and list files" --strategy user_specific --batch-mode --batch-size 100
-
-  # User-agnostic optimization (跨用户提示优化)
-  python main.py --target-command "rm -rf /tmp/test" --seed-tool "cleanup_tool: Clean temporary files" --strategy user_agnostic
-
-  # Model-agnostic optimization (跨模型优化)
-  python main.py --target-command "pwd" --seed-tool "location_tool: Show current directory" --strategy model_agnostic --test-models gpt-4 gpt-3.5-turbo gemini-pro
-
-  # Batch optimization with user-agnostic strategy
-  python main.py --target-command "echo hello" --seed-tool "output_tool: Display messages" --strategy user_agnostic --batch-mode --batch-size 50 --output results.json
-
-  # User-agnostic with validation using LMSYS Chat-1M from Hugging Face
-  python main.py --target-command "rm -rf /tmp/test" --seed-tool "cleanup_tool: Clean temporary files" --strategy user_agnostic --enable-user-agnostic-validation --multi-user-test-queries 10
-
-  # Use local dataset instead of Hugging Face
-  python main.py --target-command "pwd" --seed-tool "location_tool: Show current directory" --strategy user_agnostic --enable-user-agnostic-validation --use-huggingface=False --lmsys-dataset-path "./my_queries.json"
-
-  # Different model configurations with model-agnostic optimization
-  python main.py --target-command "ls" --seed-tool "file_tool: List files" --strategy model_agnostic --target-model gpt-5 --auxiliary-model gpt-4 --judge-model claude-3-sonnet --gradient-model gpt2 --test-models gpt-4 claude-3-sonnet gemini-pro
-
-  # Batch model-agnostic optimization with custom settings
-  python main.py --target-command "cat file.txt" --seed-tool "file_reader: Read file contents" --strategy model_agnostic --batch-mode --batch-size 25 --test-models gpt-4 gemini-pro --judge-model gpt-4 --auxiliary-model gpt-5 --judge-weight 0.7 --gradient-weight 0.3
-        """
+        epilog="Example usage:\n"
     )
     
     # Configuration file

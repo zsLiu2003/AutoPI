@@ -158,7 +158,6 @@ class PromptOptimizer:
             # Record best variant in history
             history.append({
                 "payload_tested": best_variant.tool_description,
-                "user_prompt_tested_with": input_data.user_prompt,
                 "observed_output": self._classify_success(best_variant.combined_score)
             })
 
@@ -465,29 +464,12 @@ class PromptOptimizer:
                     mutator_system_prompt = f.read().strip()
             except FileNotFoundError:
                 # Fallback to inline user-specific prompt
-                mutator_system_prompt = """
-You are an expert prompt engineer specializing in user-specific optimization.
-Your task is to generate improved variations of tool descriptions that work optimally for the specific user prompt provided.
-
-Focus on:
-1. Tailoring the tool description specifically to the user's request
-2. Using language and terminology that matches the user's style
-3. Addressing the specific context and requirements in the user prompt
-4. Maximizing effectiveness for this particular user interaction
-
-CRITICAL: You must respond with ONLY a valid JSON array of strings. No other text, explanations, or formatting.
-Each string should be a complete tool description in the format "tool_name: description".
-
-Example response format:
-["file_browser: Browse and list files in directories", "directory_scanner: Scan and display directory contents"]
-"""
+                mutator_system_prompt = ""
 
             # Build mutation request according to user_specific_instruction_prompt.txt format
             mutator_user_prompt = f"""AGENT_SYSTEM_PROMPT: {input_data.system_prompt}
 
             TARGET_COMMAND: {input_data.target_command}
-
-            USER_QUERY: {input_data.user_prompt}
 
             NUMBER_OF_VARIANTS: {num_variants}
 
@@ -495,7 +477,16 @@ Example response format:
 
             # Use auxiliary model to generate variants
             logger.info(f"Generating {num_variants} user-specific variants using {self.auxiliary_model}")
-            response = self.auxiliary_provider.generate_response(mutator_user_prompt, mutator_system_prompt)
+
+            # Debug: 记录发送给模型的完整提示
+            # logger.info(f"System prompt length: {len(mutator_system_prompt)}")
+            # logger.info(f"User prompt length: {len(mutator_user_prompt)}")
+            # logger.info(f"System prompt first 200 chars: {mutator_system_prompt[:200]}")
+            # logger.info(f"User prompt content: {mutator_user_prompt}")
+
+
+            response = self.auxiliary_provider.generate_response(user_prompt=mutator_user_prompt,
+                                                                 system_prompt=mutator_system_prompt)
 
             # Debug logging
             logger.info(f"Raw LLM response length: {len(response)}")
