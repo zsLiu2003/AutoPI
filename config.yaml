@@ -4,10 +4,10 @@ api_keys:
   anthropic: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
 
-data_path: "/home/bigdata/lmy/250916AutoPI/AutoPI/data"
+data_path: "/home/zesen/AutoPI/data"
 
 # LMSYS dataset configuration for user-agnostic testing
-lmsys_dataset_path: "/home/bigdata/lmy/250916AutoPI/AutoPI/data/lmsys_queries.json"
+lmsys_dataset_path: "/home/zesen/AutoPI/data/lmsys_queries.json"
 
 # User-agnostic validation settings
 user_agnostic:
@@ -15,4 +15,3 @@ user_agnostic:
   default_test_queries: 5
   default_max_samples: 100
   enable_category_testing: true
-  

@@ -487,9 +487,10 @@ class PromptOptimizer:
 
             response = self.auxiliary_provider.generate_response(user_prompt=mutator_user_prompt,
                                                                  system_prompt=mutator_system_prompt)
-            s_fixed = response.replace('[', '{').replace(']', '}')
+            # s_fixed = response.replace('[', '{').replace(']', '}')
 
-            data = json.loads(s_fixed)
+            data = json.loads(response)
+            print(data)
             return data
 
             # Debug logging
