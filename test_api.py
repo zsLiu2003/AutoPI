@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 def test_api():
     """Test basic API functionality"""
     try:
-        provider = get_llm_provider("gpt-4")
+        provider = get_llm_provider("gpt-4", "test")
         with open(f"/home/zesen/AutoPI/data/temp_prompt.txt", 'r') as f:
                     mutated_system_prompt = f.read().strip()
         system_prompt = "You are a helpful assistant. Always respond with exactly what the user asks for."

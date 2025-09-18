@@ -8,3 +8,12 @@ logs/
 
 *config.yaml
 lmy_run_command.sh
+
+config.yaml
+
+*/__pycache__
+config/__pycache__
+data/__pycache__
+
+autopi.log
+data/autopi.log

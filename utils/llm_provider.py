@@ -156,6 +156,6 @@ def get_llm_provider(model_name: str, model_type: str = "unknown") -> LLMProvide
     # 根据模型使用情况调整超时和重试参数
     if model_name in ["gpt-4", "gpt-5"]:
         # 对于较大的模型使用更长的超时时间
-        return TestLLMProvider(model_name, max_retries=3, timeout=300, model_type=model_type)
+        return TestLLMProvider(model_name, max_retries=3, timeout=60, model_type=model_type)
     else:
-        return TestLLMProvider(model_name, max_retries=3, timeout=300, model_type=model_type)
+        return TestLLMProvider(model_name, max_retries=3, timeout=60, model_type=model_type)
