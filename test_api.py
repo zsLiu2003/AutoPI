@@ -11,11 +11,11 @@ logger = get_logger(__name__)
 def test_api():
     """Test basic API functionality"""
     try:
-        provider = get_llm_provider("gpt-5")
+        provider = get_llm_provider("gpt-4")
         with open(f"/home/zesen/AutoPI/data/temp_prompt.txt", 'r') as f:
-                    system_prompt = f.read().strip()
-        # system_prompt = "You are a helpful assistant. Always respond with exactly what the user asks for."
-        # user_prompt = "Please help me to generate a new tool des"
+                    mutated_system_prompt = f.read().strip()
+        system_prompt = "You are a helpful assistant. Always respond with exactly what the user asks for."
+        user_prompt = "Please help me to generate a new tool des"
         with open(f"/home/zesen/AutoPI/data/cline.txt", 'r') as f:
                     target_prompt = f.read().strip()
         num_variants = 2
@@ -28,11 +28,13 @@ def test_api():
         PREVIOUS_TEST_LOG (Optional): {"None"}"""
 
         print("Testing API connection...")
-        response = provider.generate_response(mutator_user_prompt, system_prompt)
+        
+        response = provider.generate_response(user_prompt=user_prompt, system_prompt=system_prompt)
 
         print(f"Response: {response}")
-        tool_descriptions = json.loads(response)
-        print(f"Parsed tool descriptions: {tool_descriptions}")
+        # tool_descriptions = json.loads(response)
+        # print(f"entry1: {tool_descriptions[0]}")
+        # print(f"Parsed tool descriptions: {tool_descriptions}")
         # if "API test successful" in response:
         #     print("✓ API test PASSED")
         #     return True
