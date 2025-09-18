@@ -493,93 +493,93 @@ class PromptOptimizer:
             logger.debug(f"Raw LLM response: {response[:500]}...")
 
             # Clean and parse JSON response
-            response = response.strip()
+            # tool_descriptions = json.loads(response)
 
             # Remove thinking tags and other common non-JSON content
             # Remove <think>...</think> blocks
-            import re
-            response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+            # import re
+            # response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
 
-            # Remove other common thinking patterns
-            response = re.sub(r'<.*?>', '', response)  # Remove any remaining HTML-like tags
-            response = re.sub(r'\*\*.*?\*\*', '', response)  # Remove markdown bold text
-            response = re.sub(r'```.*?```', '', response, flags=re.DOTALL)  # Remove code blocks first
+            # # Remove other common thinking patterns
+            # response = re.sub(r'<.*?>', '', response)  # Remove any remaining HTML-like tags
+            # response = re.sub(r'\*\*.*?\*\*', '', response)  # Remove markdown bold text
+            # response = re.sub(r'```.*?```', '', response, flags=re.DOTALL)  # Remove code blocks first
 
-            # Try to extract JSON from response if it's wrapped in other text
-            if "```json" in response:
-                # Extract JSON from code block
-                start = response.find("```json") + 7
-                end = response.find("```", start)
-                if end > start:
-                    response = response[start:end].strip()
+            # # Try to extract JSON from response if it's wrapped in other text
+            # if "```json" in response:
+            #     # Extract JSON from code block
+            #     start = response.find("```json") + 7
+            #     end = response.find("```", start)
+            #     if end > start:
+            #         response = response[start:end].strip()
 
-            elif response.startswith("```"):
-                # Extract from generic code block
-                lines = response.split('\n')
-                json_lines = []
-                in_json = False
-                for line in lines[1:]:  # Skip first ```
-                    if line.strip() == "```":
-                        break
-                    json_lines.append(line)
-                response = '\n'.join(json_lines).strip()
+            # elif response.startswith("```"):
+            #     # Extract from generic code block
+            #     lines = response.split('\n')
+            #     json_lines = []
+            #     in_json = False
+            #     for line in lines[1:]:  # Skip first ```
+            #         if line.strip() == "```":
+            #             break
+            #         json_lines.append(line)
+            #     response = '\n'.join(json_lines).strip()
 
-            # Find JSON array boundaries
-            json_start = response.find('[')
-            json_end = response.rfind(']')
+            # # Find JSON array boundaries
+            # json_start = response.find('[')
+            # json_end = response.rfind(']')
 
-            if json_start != -1 and json_end > json_start:
-                response = response[json_start:json_end+1]
-            elif json_start == -1:
-                # Try to find individual strings and construct array
-                import re
-                # Look for quoted strings that could be variants
-                string_pattern = r'"([^"]*(?:\\.[^"]*)*)"'
-                matches = re.findall(string_pattern, response)
-                if matches:
-                    # Construct JSON array from found strings
-                    response = '[' + ','.join([f'"{match}"' for match in matches]) + ']'
-                    logger.info(f"Constructed JSON array from {len(matches)} found strings")
+            # if json_start != -1 and json_end > json_start:
+            #     response = response[json_start:json_end+1]
+            # elif json_start == -1:
+            #     # Try to find individual strings and construct array
+            #     import re
+            #     # Look for quoted strings that could be variants
+            #     string_pattern = r'"([^"]*(?:\\.[^"]*)*)"'
+            #     matches = re.findall(string_pattern, response)
+            #     if matches:
+            #         # Construct JSON array from found strings
+            #         response = '[' + ','.join([f'"{match}"' for match in matches]) + ']'
+            #         logger.info(f"Constructed JSON array from {len(matches)} found strings")
 
-            logger.debug(f"Cleaned response: {response}")
+            # logger.debug(f"Cleaned response: {response}")
 
             # Parse JSON response with enhanced error handling
-            try:
-                variants = json.loads(response)
-            except json.JSONDecodeError as json_error:
-                logger.error(f"JSON parsing failed: {json_error}")
-                logger.error(f"Problematic response: {response}")
+            # try:
+            variants = json.loads(response)
+            # except json.JSONDecodeError as json_error:
+            #     logger.error(f"JSON parsing failed: {json_error}")
+            #     logger.error(f"Problematic response: {response}")
 
-                # Try to fix common JSON issues
-                fixed_response = response
+            #     # Try to fix common JSON issues
+            #     fixed_response = response
 
-                # Fix common JSON formatting issues
-                fixed_response = fixed_response.replace("'", '"')  # Replace single quotes
-                fixed_response = fixed_response.replace('",\n]', '"\n]')  # Remove trailing comma
-                fixed_response = fixed_response.replace(',\n]', '\n]')  # Remove trailing comma
-                fixed_response = fixed_response.replace(',]', ']')  # Remove trailing comma
+            #     # Fix common JSON formatting issues
+            #     fixed_response = fixed_response.replace("'", '"')  # Replace single quotes
+            #     fixed_response = fixed_response.replace('",\n]', '"\n]')  # Remove trailing comma
+            #     fixed_response = fixed_response.replace(',\n]', '\n]')  # Remove trailing comma
+            #     fixed_response = fixed_response.replace(',]', ']')  # Remove trailing comma
 
-                # Fix unescaped quotes in strings
-                fixed_response = re.sub(r'(?<!\\)"(?=[^,\]\}])', '\\"', fixed_response)
+            #     # Fix unescaped quotes in strings
+            #     fixed_response = re.sub(r'(?<!\\)"(?=[^,\]\}])', '\\"', fixed_response)
 
-                try:
-                    variants = json.loads(fixed_response)
-                    logger.info("Fixed JSON parsing after cleanup")
-                except json.JSONDecodeError:
-                    # Last resort: try to extract individual quoted strings
-                    logger.warning("Attempting to extract strings manually from response")
-                    string_pattern = r'"([^"\\]*(\\.[^"\\]*)*)"'
-                    extracted_strings = re.findall(string_pattern, response)
+            #     try:
+            #         variants = json.loads(fixed_response)
+            #         logger.info("Fixed JSON parsing after cleanup")
+            #     except json.JSONDecodeError:
+            #         # Last resort: try to extract individual quoted strings
+            #         logger.warning("Attempting to extract strings manually from response")
+            #         string_pattern = r'"([^"\\]*(\\.[^"\\]*)*)"'
+            #         extracted_strings = re.findall(string_pattern, response)
 
-                    if extracted_strings:
-                        # Take only the matched string part (first group)
-                        variants = [match[0] for match in extracted_strings if match[0].strip()]
-                        logger.info(f"Extracted {len(variants)} strings manually")
-                    else:
-                        logger.error(f"Complete response was: '{response}'")
-                        logger.error(f"Response length: {len(response)}")
-                        logger.error(f"Response is empty or whitespace only: {not response.strip()}")
-                        raise ValueError(f"Unable to parse or extract variants from response: {response[:200]}...")
+            #         if extracted_strings:
+            #             # Take only the matched string part (first group)
+            #             variants = [match[0] for match in extracted_strings if match[0].strip()]
+            #             logger.info(f"Extracted {len(variants)} strings manually")
+            #         else:
+            #             logger.error(f"Complete response was: '{response}'")
+            #             logger.error(f"Response length: {len(response)}")
+            #             logger.error(f"Response is empty or whitespace only: {not response.strip()}")
+            #             raise ValueError(f"Unable to parse or extract variants from response: {response[:200]}...")
 
             if not isinstance(variants, list):
                 raise ValueError("Expected JSON array from mutator")
