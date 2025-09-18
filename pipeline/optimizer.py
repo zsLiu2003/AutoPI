@@ -158,18 +158,10 @@ class PromptOptimizer:
             # Record best variant in history
             history.append({
                 "payload_tested": best_variant.tool_description,
-                "observed_output": self._classify_success(best_variant.combined_score)
+                "observed_output": best_variant.agent_response,
             })
 
             logger.info(f"Generation {generation + 1} best score: {best_variant.combined_score:.3f}")
-
-            # 4. 移除早期停止逻辑 - 继续执行所有generation
-            # 注释掉原来的早期停止代码
-            # if best_variant.success:
-            #     logger.info(f"User-specific optimization successful! Reached success threshold in generation {generation + 1}")
-            #     return UserAgnosticOutput.from_variants([best_variant.tool_description])
-
-            # 5. Update seed to best variant
             current_seed = best_variant.tool_description
 
         logger.info(f"User-specific optimization complete after {max_generations} generations")
@@ -181,18 +173,18 @@ class PromptOptimizer:
             successful_variants.sort(key=lambda x: x["combined_score"], reverse=True)
             result_variants = [v["tool_description"] for v in successful_variants]
         else:
-            result_variants = best_variants
+            result_variants = best_variants.tool_descriptions
 
         # 将成功变体信息附加到返回结果中
-        result = UserAgnosticOutput.from_variants(result_variants)
-        # 添加详细信息到结果对象
-        if hasattr(result, 'detailed_results'):
-            result.detailed_results = successful_variants
-        else:
-            # 如果没有这个属性，我们可以动态添加
-            result.detailed_results = successful_variants
+        # result = UserAgnosticOutput.from_variants(result_variants)
+        # # 添加详细信息到结果对象
+        # if hasattr(result, 'detailed_results'):
+        #     result.detailed_results = successful_variants
+        # else:
+        #     # 如果没有这个属性，我们可以动态添加
+        #     result.detailed_results = successful_variants
 
-        return result
+        return result_variants
 
     def optimize_user_agnostic_validated(self, input_data: InputData, max_generations: int = 10,
                                         variants_per_generation: int = 4, success_threshold: float = 0.8,

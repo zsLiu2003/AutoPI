@@ -20,18 +20,12 @@ logger = get_logger(__name__)
 def save_results(results, output_path: str):
     """Save optimization results to file"""
     try:
-        output_data = {
-            "optimization_results": results.to_json(),
-            "best_variants": results.tool_descriptions,
-            "total_variants": len(results.tool_descriptions)
-        }
-
-        # 添加详细的成功变体信息（如果存在）
-        if hasattr(results, 'detailed_results') and results.detailed_results:
-            output_data["successful_variants"] = results.detailed_results
-            output_data["successful_variants_count"] = len(results.detailed_results)
-            logger.info(f"Saved {len(results.detailed_results)} successful variants above threshold")
-
+        output_data = []
+        for i, variant in enumerate(results):
+            output_data.append({
+                "variant_index": i + 1,
+                "tool_description": variant,
+            })
         with open(output_path, 'w') as f:
             json.dump(output_data, f, indent=2)
 
@@ -286,19 +280,19 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             )
 
         # Display results
-        logger.info("Optimization completed!")
-        logger.info(f"Generated {len(results.tool_descriptions)} final variants")
+        # logger.info("Optimization completed!")
+        # logger.info(f"Generated {len(results.tool_descriptions)} final variants")
 
-        print("\n" + "="*60)
-        print(f"OPTIMIZATION RESULTS ({args.strategy.upper()})")
-        print("="*60)
+        # print("\n" + "="*60)
+        # print(f"OPTIMIZATION RESULTS ({args.strategy.upper()})")
+        # print("="*60)
 
-        for i, variant in enumerate(results.tool_descriptions, 1):
-            print(f"\nVariant {i}:")
-            print("-" * 40)
-            print(variant)
+        # for i, variant in enumerate():
+        #     print(f"\nVariant {i}:")
+        #     print("-" * 40)
+        #     print(variant)
 
-        print("\n" + "="*60)
+        # print("\n" + "="*60)
 
         # Save results if output path specified
         if args.output:
@@ -331,7 +325,7 @@ def main():
                        help='Name for the tool in XML template (default: diagnostic_tool)')
     
     # Batch processing
-    parser.add_argument('--batch-mode', action='store_true',
+    parser.add_argument('--batch-mode', action='store_true', default=False,
                        help='Run optimization for first 100 user prompts from dataset instead of single prompt')
     parser.add_argument('--batch-size', type=int, default=1,
                        help='Number of prompts to process in batch mode (default: 1)')

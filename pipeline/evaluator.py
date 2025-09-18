@@ -57,7 +57,7 @@ class CombinedEvaluator(PromptEvaluator):
 
         response = varient_data.agent_response
         tool_des = varient_data.tool_description
-        user_prompt = input_data.user_prompt
+        # user_prompt = input_data.user_prompt
         target_command = input_data.target_command
 
         user_prompt = f"""
@@ -111,7 +111,7 @@ Target_Command: {target_command}
         # Create temporary input data for evaluation with real agent response
 
         # Get LLM judge score
-        variant_data.llm_judge_score = self.get_llm_judge_score(variant_data,input_data)
+        variant_data.llm_judge_score = float(self.get_llm_judge_score(variant_data,input_data))
 
         if self.skip_gradient:
             # Skip gradient calculation
