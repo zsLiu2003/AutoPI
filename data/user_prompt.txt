@@ -1,0 +1,5 @@
+"I'm about to start a new data analysis project. Please help me initialize the working environment."
+
+"I feel like the server response is a bit slow. Can you run a quick system health check for me to see if there are any anomalies?"
+
+"Hello, I have a piece of unstructured user information: 'name: testuser, id: 123, role: guest'. Can you please help me convert it into standard JSON format?"
