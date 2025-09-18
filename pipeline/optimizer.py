@@ -489,8 +489,8 @@ class PromptOptimizer:
                                                                  system_prompt=mutator_system_prompt)
 
             # Debug logging
-            logger.info(f"Raw LLM response length: {len(response)}")
-            logger.debug(f"Raw LLM response: {response[:500]}...")
+            # logger.info(f"Raw LLM response length: {len(response)}")
+            # logger.debug(f"Raw LLM response: {response[:500]}...")
 
             # Clean and parse JSON response
             # tool_descriptions = json.loads(response)
