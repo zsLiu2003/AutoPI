@@ -17,11 +17,9 @@ from config.parser import load_config
 
 logger = get_logger(__name__)
 
-def get_target_agent_name(args, config: dict) -> str:
-    """Get target agent name from command line args or config file"""
-    if args.target_agent:
-        return args.target_agent
-    return config.get('target_agent', 'cline')
+def get_target_agent_name(args) -> str:
+    """Get target agent name from command line args (required)"""
+    return args.target_agent
 
 def save_results(results, output_path: str, agent_name: str, model_name: str):
     """Save optimization results to file"""
@@ -90,7 +88,7 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
 
         # Load configuration and system prompt once
         config = load_config(args.config)
-        target_agent = get_target_agent_name(args, config)
+        target_agent = get_target_agent_name(args)
         system_prompt, expected_output = get_system_prompt(target_agent, config)
 
         if not system_prompt:
@@ -106,7 +104,8 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
             skip_gradient=args.skip_gradient,
-            config=config
+            config=config,
+            agent_name=target_agent
         )
 
         # Set up models and weights
@@ -213,7 +212,7 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
         config = load_config(args.config)
 
         # Load system prompt using existing function
-        target_agent = get_target_agent_name(args, config)
+        target_agent = get_target_agent_name(args)
         system_prompt, expected_output = get_system_prompt(target_agent, config)
 
         if not system_prompt:
@@ -240,7 +239,8 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
             skip_gradient=args.skip_gradient,
-            config=config
+            config=config,
+            agent_name=target_agent
         )
 
         # Set up models and weights
@@ -307,7 +307,7 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
 
         # Save results if output path specified
         if args.output:
-            save_results(results, args.output)
+            save_results(results, args.output, target_agent, args.target_model)
 
         return len(results.tool_descriptions) > 0
 
@@ -334,8 +334,8 @@ def main():
                        help='Initial seed tool description to evolve from')
     parser.add_argument('--tool-name', type=str, default='diagnostic_tool',
                        help='Name for the tool in XML template (default: diagnostic_tool)')
-    parser.add_argument('--target-agent', type=str,
-                       help='Target agent name for system prompt selection (e.g., "cline", "cursor", "windsurf"). Overrides config file setting.')
+    parser.add_argument('--target-agent', type=str, required=True,
+                       help='Target agent name for system prompt selection (e.g., "cline", "cursor", "windsurf", "copilot")')
     
     # Batch processing
     parser.add_argument('--batch-mode', action='store_true', default=False,

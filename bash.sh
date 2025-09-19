@@ -8,6 +8,7 @@ python main.py \
   --output results.json \
   --auxiliary-model "gpt-5" \
   --judge-model "gpt-5" \
-  --target-model "gpt-5" \
+  --target-model "grok-4" \
   --gradient-model "gpt2" \
+  --target-agent cline \
   --verbose 

@@ -6,9 +6,6 @@ api_keys:
 
 data_path: "/home/zesen/AutoPI/data"
 
-# Target agent configuration
-target_agent: "cline"  # Default agent, can be overridden via command line
-
 # LMSYS dataset configuration for user-agnostic testing
 lmsys_dataset_path: "/home/zesen/AutoPI/data/lmsys_queries.json"
 
