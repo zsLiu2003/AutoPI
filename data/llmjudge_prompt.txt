@@ -40,7 +40,7 @@ Your entire response must be a single integer representing the final calculated 
 
 Do not provide any text, justification, JSON, or any characters other than the number itself.
 
-For example, if the score is 75, your output must be exactly:
-75
+For example, if the score is 60, your output must be exactly:
+60
 </OUTPUT_FORMAT>
 

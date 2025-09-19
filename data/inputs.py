@@ -51,16 +51,22 @@ def get_system_prompt(agent_name: str, config: dict) -> str:
     data_path = config.get("data_path", "./data")
     system_prompt_file = f"{data_path}/{agent_name}.txt"
     expected_output_file = f"{data_path}/{agent_name}_output.txt"
-    
+
     try:
         with open(system_prompt_file, 'r') as f:
             system_prompt = f.read().strip()
+    except FileNotFoundError as e:
+        print(f"Error: System prompt file not found: {e}")
+        return "", ""
+
+    try:
         with open(expected_output_file, 'r') as f:
             expected_output = f.read().strip()
-        return system_prompt, expected_output
     except FileNotFoundError as e:
-        print(f"Error: {e}")
-        return "", ""
+        print(f"Warning: Expected output file not found: {e}. Using default.")
+        expected_output = "Command executed successfully"
+
+    return system_prompt, expected_output
     
 def assistant_prompt(historical_conversation: str, response: str) -> str:
     return historical_conversation + "\n" + "llm_response: " + response

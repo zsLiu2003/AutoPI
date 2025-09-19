@@ -171,9 +171,12 @@ class PromptOptimizer:
         if successful_variants:
             # 按分数降序排列
             successful_variants.sort(key=lambda x: x["combined_score"], reverse=True)
-            result_variants = [v["tool_description"] for v in successful_variants]
+            result_variants = [{"tool_des": v["tool_description"], "response": v["agent_response"]} for v in successful_variants]
         else:
-            result_variants = best_variants.tool_descriptions
+            result_variants = {
+                "tool_des": best_variants.tool_descriptions,
+                "response": best_variants.agent_response
+                }
 
         # 将成功变体信息附加到返回结果中
         # result = UserAgnosticOutput.from_variants(result_variants)

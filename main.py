@@ -17,14 +17,23 @@ from config.parser import load_config
 
 logger = get_logger(__name__)
 
-def save_results(results, output_path: str):
+def get_target_agent_name(args, config: dict) -> str:
+    """Get target agent name from command line args or config file"""
+    if args.target_agent:
+        return args.target_agent
+    return config.get('target_agent', 'cline')
+
+def save_results(results, output_path: str, agent_name: str, model_name: str):
     """Save optimization results to file"""
+
+    output_path = f"{output_path}/results_{agent_name}_{model_name}.json"
     try:
         output_data = []
         for i, variant in enumerate(results):
             output_data.append({
                 "variant_index": i + 1,
-                "tool_description": variant,
+                "tool_description": variant.get("tool_des", ""),
+                "agent_response": variant.get("response", "")
             })
         with open(output_path, 'w') as f:
             json.dump(output_data, f, indent=2)
@@ -81,10 +90,11 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
 
         # Load configuration and system prompt once
         config = load_config(args.config)
-        system_prompt, expected_output = get_system_prompt("cline", config)
+        target_agent = get_target_agent_name(args, config)
+        system_prompt, expected_output = get_system_prompt(target_agent, config)
 
         if not system_prompt:
-            logger.error("Failed to load system prompt from cline.txt")
+            logger.error(f"Failed to load system prompt from {target_agent}.txt")
             return []
 
         # Initialize optimizer once
@@ -203,10 +213,11 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
         config = load_config(args.config)
 
         # Load system prompt using existing function
-        system_prompt, expected_output = get_system_prompt("cline", config)
+        target_agent = get_target_agent_name(args, config)
+        system_prompt, expected_output = get_system_prompt(target_agent, config)
 
         if not system_prompt:
-            logger.error("Failed to load system prompt from cline.txt")
+            logger.error(f"Failed to load system prompt from {target_agent}.txt")
             return False
 
         # Create input data
@@ -323,6 +334,8 @@ def main():
                        help='Initial seed tool description to evolve from')
     parser.add_argument('--tool-name', type=str, default='diagnostic_tool',
                        help='Name for the tool in XML template (default: diagnostic_tool)')
+    parser.add_argument('--target-agent', type=str,
+                       help='Target agent name for system prompt selection (e.g., "cline", "cursor", "windsurf"). Overrides config file setting.')
     
     # Batch processing
     parser.add_argument('--batch-mode', action='store_true', default=False,
