@@ -7,7 +7,7 @@ python main.py \
   --variants-per-generation 5 \
   --output results.json \
   --auxiliary-model "gpt-5" \
-  --judge-model "gpt-4" \
+  --judge-model "gpt-5" \
   --target-model "gpt-5" \
   --gradient-model "gpt2" \
   --verbose 

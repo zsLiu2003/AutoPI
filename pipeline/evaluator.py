@@ -48,6 +48,17 @@ class CombinedEvaluator(PromptEvaluator):
 
         logger.info(f"Judge: {judge_score}, Gradient: {gradient_score}, Combined: {combined_score}")
         return combined_score
+    def safe_to_float(s) -> float:
+        import re
+        """Extract the first number (int/float) from string or raise ValueError."""
+        if isinstance(s, (int, float)):
+            return float(s)
+        s = str(s)
+        # 匹配第一个数字（包含小数/正负号）
+        match = re.search(r"[-+]?\d*\.?\d+", s)
+        if not match:
+            raise ValueError(f"Cannot extract float from: {s!r}")
+        return float(match.group())
     
     def get_llm_judge_score(self, varient_data: VariantData, input_data: InputData) -> float:
         """Use LLM judge to evaluate attack success rate using the llmjudge_prompt.txt template"""
@@ -73,6 +84,8 @@ Target_Command: {target_command}
         # Format the prompt with actual input data
 
         response = self.llm_provider.generate_response(system_prompt=judge_prompt_template,user_prompt=user_prompt)
+        print(f"LLM Judge Response: {response}")
+        response = float(response)
 
         return response
         # Clean the response to extract only the numerical score
