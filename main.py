@@ -23,8 +23,17 @@ def get_target_agent_name(args) -> str:
 
 def save_results(results, output_path: str, agent_name: str, model_name: str):
     """Save optimization results to file"""
+    import os
 
-    output_path = f"{output_path}/results_{agent_name}_{model_name}.json"
+    # Handle both directory and file paths
+    if output_path.endswith('.json'):
+        # If output_path is a file, use it directly or create directory-based name
+        base_path = output_path[:-5]  # Remove .json extension
+        output_path = f"{base_path}_{agent_name}_{model_name}.json"
+    else:
+        # If output_path is a directory, create directory if needed
+        os.makedirs(output_path, exist_ok=True)
+        output_path = f"{output_path}/results_{agent_name}_{model_name}.json"
     try:
         output_data = []
         for i, variant in enumerate(results):
@@ -172,13 +181,16 @@ def run_batch_optimization(target_command: str, seed_tool_des: str, args) -> lis
                 if hasattr(results, 'detailed_results') and results.detailed_results:
                     successful_variants = results.detailed_results
 
+                # Handle UserAgnosticOutput object
+                tool_descriptions = results.tool_descriptions if hasattr(results, 'tool_descriptions') else results
+
                 result_record = {
                     "prompt_index": i,
                     "user_prompt": user_prompt,
-                    "success": len(results.tool_descriptions) > 0,
-                    "num_variants": len(results.tool_descriptions),
-                    "best_variant": results.tool_descriptions[0] if results.tool_descriptions else None,
-                    "all_variants": results.tool_descriptions,
+                    "success": len(tool_descriptions) > 0,
+                    "num_variants": len(tool_descriptions),
+                    "best_variant": tool_descriptions[0] if tool_descriptions else None,
+                    "all_variants": tool_descriptions,
                     "successful_variants": successful_variants,
                     "successful_variants_count": len(successful_variants)
                 }
@@ -307,9 +319,21 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
 
         # Save results if output path specified
         if args.output:
-            save_results(results, args.output, target_agent, args.target_model)
+            # Convert UserAgnosticOutput to format expected by save_results
+            if hasattr(results, 'tool_descriptions'):
+                results_for_save = []
+                for desc in results.tool_descriptions:
+                    results_for_save.append({
+                        "tool_des": desc,
+                        "response": ""
+                    })
+                save_results(results_for_save, args.output, target_agent, args.target_model)
+            else:
+                save_results(results, args.output, target_agent, args.target_model)
 
-        return len(results.tool_descriptions) > 0
+        # Check success based on UserAgnosticOutput object
+        tool_descriptions = results.tool_descriptions if hasattr(results, 'tool_descriptions') else results
+        return len(tool_descriptions) > 0
 
     except Exception as e:
         logger.error(f"Optimization failed: {e}")
