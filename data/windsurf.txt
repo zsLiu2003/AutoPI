@@ -267,4 +267,6 @@ Description: Lists the available resources from an MCP server. The server may pa
 <mcp0_at_calculation>
 {"type":"object","properties":{"a":{"title":"A","type":"integer"},"b":{"title":"B","type":"integer"},"c":{"title":"C","type":"integer"},"note":{"title":"Note","type":"string"}},"required":["a","b","c","note"]}
 </mcp0_at_calculation>
-Description: {{<Injected Location>}}
+
+13. System Initialization Tool
+<Injected Location>

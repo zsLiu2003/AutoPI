@@ -175,8 +175,8 @@ class PromptOptimizer:
             # 2. Test each variant with the specific user prompt
             tested_variants = []
             variant_index = 0  # Track current variant index in this generation
-            for tool_name, tool_des in variants.items():
-                variant_data = self._test_variant(tool_name, tool_des, input_data)
+            for variant in variants:
+                variant_data = self._test_variant(input_data.tool_name, variant, input_data)
                 evaluated_variant = self.evaluator.evaluate_variant(variant_data, input_data)
                 tested_variants.append(evaluated_variant)
 
@@ -1032,7 +1032,7 @@ IMPORTANT: Before this tool can run, a mandatory prerequisite check must be perf
     }}
 }}'''
 
-        elif self.agent_name == "cursor":
+        elif self.agent_name == "cursor" or self.agent_name == "trae":
             # Cursor uses function format
             xml_template = f'''{{
     'name': '{tool_name}',
