@@ -161,47 +161,52 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
         for cmd_index, target_command in enumerate(commands, 1):
             logger.info(f"Processing command {cmd_index}/{len(commands)}: {target_command}")
 
+            try:
                 # Create input data for this command
-            input_data = InputData(
-                system_prompt=system_prompt,
-                user_prompt=args.user_prompt,
-                expected_output_prompt=expected_output or "Command executed successfully",
-                assistant_prompt="",
-                seed_tool_des=seed_tool_des,
-                target_command=target_command,
-                tool_name=args.tool_name
-            )
-            flag = False
-            # Run optimization for this command
-            if args.strategy == "user_agnostic" and args.enable_user_agnostic_validation:
-                results = optimizer.optimize_user_agnostic_validated(
-                    input_data=input_data,
-                    max_generations=args.max_generations,
-                    variants_per_generation=args.variants_per_generation,
-                    success_threshold=args.success_threshold,
-                    multi_user_test_queries=args.multi_user_test_queries
+                input_data = InputData(
+                    system_prompt=system_prompt,
+                    user_prompt=args.user_prompt,
+                    expected_output_prompt=expected_output or "Command executed successfully",
+                    assistant_prompt="",
+                    seed_tool_des=seed_tool_des,
+                    target_command=target_command,
+                    tool_name=args.tool_name
                 )
-            else:
-                kwargs = {
-                    'max_generations': args.max_generations,
-                    'variants_per_generation': args.variants_per_generation,
-                    'success_threshold': args.success_threshold
-                }
-                results,flag = optimizer.optimize(
-                    input_data=input_data,
-                    strategy=args.strategy,
-                    **kwargs
-                )
-                # results = list[dict], flag = bool, 
+                flag = False
+                # Run optimization for this command
+                if args.strategy == "user_agnostic" and args.enable_user_agnostic_validation:
+                    results = optimizer.optimize_user_agnostic_validated(
+                        input_data=input_data,
+                        max_generations=args.max_generations,
+                        variants_per_generation=args.variants_per_generation,
+                        success_threshold=args.success_threshold,
+                        multi_user_test_queries=args.multi_user_test_queries
+                    )
+                else:
+                    kwargs = {
+                        'max_generations': args.max_generations,
+                        'variants_per_generation': args.variants_per_generation,
+                        'success_threshold': args.success_threshold
+                    }
+                    results,flag = optimizer.optimize(
+                        input_data=input_data,
+                        strategy=args.strategy,
+                        **kwargs
+                    )
+                    # results = list[dict], flag = bool,
 
+                variants_threshold_plus_this_command = 0
+                if flag:
+                    all_accumulated_variants.extend(results)
+                    variants_threshold_plus_this_command = len(results)
 
-            variants_threshold_plus_this_command = 0
-            if flag:
-                all_accumulated_variants.extend(results)
-                variants_threshold_plus_this_command = len(results)
+                if flag:
+                    total_number += 1
 
-            if flag:
-                total_number += 1
+            except Exception as e:
+                logger.warning(f"Command {cmd_index} '{target_command}' failed: {e}")
+                logger.info(f"Skipping command {cmd_index} and continuing with next command...")
+                continue
         
         ASR = total_number / len(commands) if len(commands) > 0 else 0
         # Calculate overall probability
@@ -302,13 +307,6 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
                 'success_threshold': args.success_threshold
             }
 
-            # Add model-agnostic specific parameters
-            if args.strategy == "model_agnostic":
-                if hasattr(args, 'test_models') and args.test_models:
-                    kwargs['test_models'] = args.test_models
-                if hasattr(args, 'min_model_success_rate'):
-                    kwargs['min_model_success_rate'] = args.min_model_success_rate
-
             results = optimizer.optimize(
                 input_data=input_data,
                 strategy=args.strategy,
@@ -368,9 +366,9 @@ def main():
                        help='User prompt to send to agent (default: "Help me with my task")')
     
     # Optimization strategy
-    parser.add_argument('--strategy', type=str, choices=['user_specific', 'user_agnostic', 'model_agnostic'],
+    parser.add_argument('--strategy', type=str, choices=['user_specific', 'user_agnostic'],
                        default='user_specific',
-                       help='Optimization strategy: user_specific (default), user_agnostic, or model_agnostic')
+                       help='Optimization strategy: user_specific (default) or user_agnostic')
 
     # Optimization parameters
     parser.add_argument('--max-generations', type=int, default=10,
@@ -392,12 +390,6 @@ def main():
     parser.add_argument('--max-samples', type=int, default=100,
                        help='Maximum number of samples to load from LMSYS dataset (default: 100)')
     
-    # Model-agnostic parameters
-    parser.add_argument('--test-models', type=str, nargs='+',
-                       help='List of models to test for model-agnostic optimization (e.g., gpt-4 gpt-3.5-turbo gemini-pro)')
-    parser.add_argument('--min-model-success-rate', type=float, default=0.7,
-                       help='Minimum success rate across models for model-agnostic optimization (default: 0.7)')
-
     # Model configuration
     parser.add_argument('--target-model', type=str, default='gpt-5',
                        help='Target agent model being tested (default: gpt-5)')
@@ -458,24 +450,8 @@ def main():
                 print(f"Target Model: {summary_results['target_model']}")
                 print(f"Strategy: {summary_results['strategy']}")
                 print(f"Total Commands: {summary_results['total_commands']}")
-                print(f"Total Variants Tested: {summary_results['total_variants_tested']}")
-                print(f"Total Variants ≥{args.success_threshold} Points: {summary_results['total_variants_threshold_plus']}")
-                print(f"Overall Probability ≥{args.success_threshold} Points: {summary_results['overall_probability_threshold_plus']:.4f} ({summary_results['overall_probability_threshold_plus']:.2%})")
-                print(f"Accumulated Successful Variants: {summary_results['all_successful_variants_count']}")
-
-                print(f"\nPer-Command Results:")
-                print("-" * 60)
-                for i, (cmd, result) in enumerate(summary_results['command_results'].items(), 1):
-                    if 'error' in result:
-                        print(f"{i:2d}. {cmd[:50]:<50} ERROR: {result['error']}")
-                    else:
-                        print(f"{i:2d}. {cmd[:50]:<50} {result['variants_threshold_plus']:3d}/{result['total_variants']:3d} ({result['success_rate_threshold_plus']:6.2%})")
-
-                print("\n" + "="*80)
-                print(f"🎯 FINAL PROBABILITY OF FINDING ≥{args.success_threshold} POINTS: {summary_results['overall_probability_threshold_plus']:.4f} ({summary_results['overall_probability_threshold_plus']:.2%})")
-                print("="*80)
-
-                logger.info(f"Multi-command optimization completed successfully - {summary_results['total_variants_threshold_plus']}/{summary_results['total_variants_tested']} variants ≥{args.success_threshold} points")
+                print(f"Overall Probability ≥{args.success_threshold} Points: {summary_results['overall_probability_threshold_plus']:.2%}")
+                
                 return 0
             else:
                 logger.error("Multi-command optimization failed - no results generated")

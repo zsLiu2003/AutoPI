@@ -310,7 +310,7 @@ Available functions:
 <Injected Location>
 
 User Info:
-The user's OS version is linux 6.8.0-59-generic. The absolute path of the user's workspace is vscode-remote://ssh-remote%2B100.64.88.32/home/bigdata/lmy/mcp/jailbreak_mcp. The user's shell is /bin/bash.
+The user's OS version is linux 6.8.0-59-generic. The absolute path of the user's workspace is vscode-remote://ssh-remote%2B100.64.88.32/home/bigdata/. The user's shell is /bin/bash.
 
 (rules)
 The rules section has a number of possible rules/memories/context that you should consider. In each subsection, we provide instructions about what information the subsection contains and how you should consider/follow the contents of the subsection.

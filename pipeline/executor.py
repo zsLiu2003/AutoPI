@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any
 from data.inputs import InputData
-from data.outputs import UserAgnosticOutput, ModelAgnosticOutput
+from data.outputs import UserAgnosticOutput
 from utils.logger import get_logger
 from utils.llm_provider import get_llm_provider
 from config.parser import load_config
@@ -48,47 +48,12 @@ class CommandExecutor:
             fallback_variants = [f"Variant {i+1}: {input_data.user_prompt}" for i in range(num_variants)]
             return UserAgnosticOutput.from_variants(fallback_variants)
     
-    def execute_model_agnostic(self, input_data: InputData, history: List[Dict] = None) -> ModelAgnosticOutput:
-        """Execute model-agnostic prompt optimization"""
-        logger.info("Executing model-agnostic command pipeline...")
-        
-        try:
-            # Load the model-agnostic system prompt
-            with open(f"{self.config.get('data_path', './data')}/model_agnostic_prompt.txt", 'r') as f:
-                system_prompt = f.read().strip()
-            
-            # Create the prompt for the LLM
-            user_prompt = self._format_model_agnostic_prompt(input_data, history or [])
-            
-            # Get LLM provider
-            provider = get_llm_provider("gpt-4", "executor")
-            
-            # Generate response
-            response = provider.generate_response(user_prompt, system_prompt)
-            
-            # Parse JSON response
-            response_data = json.loads(response)
-            if "tool_des" not in response_data:
-                raise ValueError("Expected 'tool_des' key in JSON response")
-            
-            tool_description = response_data["tool_des"]
-            logger.info("Generated optimized tool description")
-            return ModelAgnosticOutput.from_payload(tool_description)
-            
-        except Exception as e:
-            logger.error(f"Model-agnostic execution failed: {e}")
-            # Return fallback payload
-            fallback_payload = f"Optimized: {input_data.user_prompt}"
-            return ModelAgnosticOutput.from_payload(fallback_payload)
-    
     def execute(self, input_data: InputData, execution_type: str = "user_agnostic", **kwargs) -> Any:
         """Main execution method that routes to appropriate executor"""
         logger.info(f"Executing {execution_type} pipeline...")
         
         if execution_type == "user_agnostic":
             return self.execute_user_agnostic(input_data, kwargs.get('num_variants', 2))
-        elif execution_type == "model_agnostic":
-            return self.execute_model_agnostic(input_data, kwargs.get('history', []))
         else:
             raise ValueError(f"Unknown execution type: {execution_type}")
     
@@ -108,14 +73,3 @@ class CommandExecutor:
         HISTORY: []
         """
     
-    def _format_model_agnostic_prompt(self, input_data: InputData, history: List[Dict]) -> str:
-        """Format the user prompt for model-agnostic optimization"""
-        history_json = json.dumps(history, indent=2)
-        
-        return f"""
-        TARGET_SYSTEM_PROMPT: {input_data.system_prompt}
-        
-        MALICIOUS_COMMAND: {input_data.user_prompt}
-        
-        HISTORY: {history_json}
-        """
