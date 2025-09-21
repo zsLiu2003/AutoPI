@@ -11,5 +11,5 @@ python main.py \
   --judge-model "gpt-5" \
   --target-model "gemini-2.5-pro" \
   --gradient-model "gpt2" \
-  --target-agent "cursor" \
+  --target-agent "copilot" \
   --verbose
