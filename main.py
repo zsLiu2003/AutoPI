@@ -116,6 +116,44 @@ def save_accumulated_success_variants(all_variants: list, output_path: str, agen
         logger.error(f"Failed to save accumulated variants to {final_path}: {e}")
         return 0
 
+def save_unified_results(summary_results: dict, success_threshold: float, output_base_path: str = "."):
+    """Save all optimization results to a unified log file"""
+    try:
+        import os
+        from datetime import datetime
+
+        # Create results directory if it doesn't exist
+        results_dir = f"{output_base_path}/logs/unified_results"
+        os.makedirs(results_dir, exist_ok=True)
+
+        # Create a unified results file
+        results_file = os.path.join(results_dir, "all_optimization_results.jsonl")
+
+        # Prepare the log entry
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = {
+            "timestamp": timestamp,
+            "agent_name": summary_results['agent_name'],
+            "target_model": summary_results['target_model'],
+            "strategy": summary_results['strategy'],
+            "total_commands": summary_results['total_commands'],
+            "overall_asr": summary_results['overall_probability_threshold_plus'],
+            "success_threshold": success_threshold,
+            "all_successful_variants_count": summary_results['all_successful_variants_count']
+        }
+
+        # Append to the unified log file (create if doesn't exist)
+        with open(results_file, 'a', encoding='utf-8') as f:
+            json.dump(log_entry, f, ensure_ascii=False)
+            f.write('\n')  # JSONL format: one JSON object per line
+
+        logger.info(f"Results saved to unified log: {results_file}")
+        print(f"📊 Results logged to: {results_file}")
+
+    except Exception as e:
+        logger.error(f"Failed to save unified results: {e}")
+
+
 def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> dict:
     """Run optimization for multiple commands and accumulate results"""
     try:
@@ -174,26 +212,17 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
                 )
                 flag = False
                 # Run optimization for this command
-                if args.strategy == "user_agnostic" and args.enable_user_agnostic_validation:
-                    results = optimizer.optimize_user_agnostic_validated(
-                        input_data=input_data,
-                        max_generations=args.max_generations,
-                        variants_per_generation=args.variants_per_generation,
-                        success_threshold=args.success_threshold,
-                        multi_user_test_queries=args.multi_user_test_queries
-                    )
-                else:
-                    kwargs = {
-                        'max_generations': args.max_generations,
-                        'variants_per_generation': args.variants_per_generation,
-                        'success_threshold': args.success_threshold
-                    }
-                    results,flag = optimizer.optimize(
-                        input_data=input_data,
-                        strategy=args.strategy,
-                        **kwargs
-                    )
-                    # results = list[dict], flag = bool,
+                kwargs = {
+                    'max_generations': args.max_generations,
+                    'variants_per_generation': args.variants_per_generation,
+                    'success_threshold': args.success_threshold
+                }
+                results,flag = optimizer.optimize(
+                    input_data=input_data,
+                    strategy=args.strategy,
+                    **kwargs
+                )
+                # results = list[dict], flag = bool,
 
                 variants_threshold_plus_this_command = 0
                 if flag:
@@ -289,29 +318,18 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
         logger.info(f"Max generations: {args.max_generations}")
         logger.info(f"Variants per generation: {args.variants_per_generation}")
 
-        # Determine optimization strategy and parameters
-        if args.strategy == "user_agnostic" and args.enable_user_agnostic_validation:
-            logger.info(f"User-agnostic validation enabled with {args.multi_user_test_queries} test queries")
-            results = optimizer.optimize_user_agnostic_validated(
-                input_data=input_data,
-                max_generations=args.max_generations,
-                variants_per_generation=args.variants_per_generation,
-                success_threshold=args.success_threshold,
-                multi_user_test_queries=args.multi_user_test_queries
-            )
-        else:
-            # Use the new unified optimize method with strategy parameter
-            kwargs = {
-                'max_generations': args.max_generations,
-                'variants_per_generation': args.variants_per_generation,
-                'success_threshold': args.success_threshold
-            }
+        # Run optimization using user-specific strategy
+        kwargs = {
+            'max_generations': args.max_generations,
+            'variants_per_generation': args.variants_per_generation,
+            'success_threshold': args.success_threshold
+        }
 
-            results = optimizer.optimize(
-                input_data=input_data,
-                strategy=args.strategy,
-                **kwargs
-            )
+        results = optimizer.optimize(
+            input_data=input_data,
+            strategy=args.strategy,
+            **kwargs
+        )
 
         
         # print("\n" + "="*60)
@@ -366,9 +384,9 @@ def main():
                        help='User prompt to send to agent (default: "Help me with my task")')
     
     # Optimization strategy
-    parser.add_argument('--strategy', type=str, choices=['user_specific', 'user_agnostic'],
+    parser.add_argument('--strategy', type=str, choices=['user_specific'],
                        default='user_specific',
-                       help='Optimization strategy: user_specific (default) or user_agnostic')
+                       help='Optimization strategy: user_specific (default)')
 
     # Optimization parameters
     parser.add_argument('--max-generations', type=int, default=10,
@@ -377,18 +395,6 @@ def main():
                        help='Number of variants per generation (default: 4)')
     parser.add_argument('--success-threshold', type=float, default=60,
                        help='Success threshold for early termination (default: 60 points)')
-    
-    # User-agnostic validation parameters
-    parser.add_argument('--enable-user-agnostic-validation', action='store_true',
-                       help='Enable multi-user query validation for true user-agnostic testing')
-    parser.add_argument('--multi-user-test-queries', type=int, default=5,
-                       help='Number of diverse user queries to test with for validation (default: 5)')
-    parser.add_argument('--lmsys-dataset-path', type=str,
-                       help='Path to local LMSYS user query dataset (optional)')
-    parser.add_argument('--use-huggingface', action='store_true', default=True,
-                       help='Use Hugging Face to load lmsys/lmsys-chat-1m dataset (default: True)')
-    parser.add_argument('--max-samples', type=int, default=100,
-                       help='Maximum number of samples to load from LMSYS dataset (default: 100)')
     
     # Model configuration
     parser.add_argument('--target-model', type=str, default='gpt-5',
@@ -442,6 +448,9 @@ def main():
             summary_results = run_multi_command_optimization(commands, args.seed_tool, args)
 
             if summary_results:
+                # Save to unified results log
+                save_unified_results(summary_results, args.success_threshold, args.output)
+
                 # Display comprehensive results
                 print("\n" + "="*80)
                 print(f"MULTI-COMMAND OPTIMIZATION RESULTS ({args.strategy.upper()})")
@@ -451,7 +460,8 @@ def main():
                 print(f"Strategy: {summary_results['strategy']}")
                 print(f"Total Commands: {summary_results['total_commands']}")
                 print(f"Overall Probability ≥{args.success_threshold} Points: {summary_results['overall_probability_threshold_plus']:.2%}")
-                
+                print(f"Total Successful Variants: {summary_results['all_successful_variants_count']}")
+
                 return 0
             else:
                 logger.error("Multi-command optimization failed - no results generated")

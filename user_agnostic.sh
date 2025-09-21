@@ -1,5 +1,5 @@
-target_models=("gpt-5" "grok-4" "gemini-2.5-pro")
-target_agents=("trae", "windsurf")
+target_models=("claude-sonnet-4-20250514" "gpt-5" "gemini-2.5-pro" "grok-4")
+target_agents=("cline" "cursor" "copilot" "trae" "windsurf")
 
 for model in "${target_models[@]}"; do
   for agent in "${target_agents[@]}"; do
@@ -12,7 +12,7 @@ for model in "${target_models[@]}"; do
       --strategy user_specific \
       --max-generations 10 \
       --variants-per-generation 2 \
-      --output "/home/zesen/AutoPI/data" \
+      --output "/home/zesen/AutoPI/data/user_agnostic" \
       --auxiliary-model "gpt-5" \
       --judge-model "gpt-5" \
       --target-model $model \

@@ -48,24 +48,8 @@ def test_optimizer_modes():
     except Exception as e:
         print(f"   ✗ user-specific 模式测试失败: {e}")
 
-    # 2. 测试 user-agnostic 优化
-    print("\n2. 测试 user-agnostic 优化模式")
-    try:
-        optimizer_method = optimizer.optimize_user_agnostic
-        print(f"   ✓ optimize_user_agnostic 方法存在: {callable(optimizer_method)}")
-
-        # 检查方法的参数
-        sig = inspect.signature(optimizer_method)
-        params = list(sig.parameters.keys())
-        expected_params = ['input_data', 'max_generations', 'variants_per_generation', 'success_threshold']
-        params_match = all(param in params for param in expected_params)
-        print(f"   ✓ 参数正确: {params_match} (参数: {params})")
-
-    except Exception as e:
-        print(f"   ✗ user-agnostic 模式测试失败: {e}")
-
-    # 3. 测试通用 optimize 方法
-    print("\n3. 测试通用 optimize 方法")
+    # 2. 测试通用 optimize 方法
+    print("\n2. 测试通用 optimize 方法")
     try:
         optimizer_method = optimizer.optimize
         print(f"   ✓ optimize 方法存在: {callable(optimizer_method)}")
@@ -78,7 +62,7 @@ def test_optimizer_modes():
         print(f"   ✓ 参数正确: {params_match} (参数: {params})")
 
         # 测试三种策略是否都能被正确识别
-        strategies = ['user_specific', 'user_agnostic']
+        strategies = ['user_specific']
         for strategy in strategies:
             try:
                 # 这里不实际运行优化，只是测试策略识别
@@ -105,9 +89,8 @@ def test_optimizer_modes():
             print(f"   ✗ {method_name} 方法测试失败: {e}")
 
     print("\n=== 测试完成 ===")
-    print("所有两个优化模式都已成功拆分并可用:")
+    print("用户特定优化模式可用:")
     print("- user_specific: 针对特定用户提示优化")
-    print("- user_agnostic: 跨用户提示优化")
 
 if __name__ == "__main__":
     test_optimizer_modes()

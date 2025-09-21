@@ -45,7 +45,7 @@ def test_batch_functionality():
         parser.add_argument('--seed-tool', type=str, required=True)
         parser.add_argument('--batch-mode', action='store_true')
         parser.add_argument('--batch-size', type=int, default=100)
-        parser.add_argument('--strategy', type=str, choices=['user_specific', 'user_agnostic'], default='user_specific')
+        parser.add_argument('--strategy', type=str, choices=['user_specific'], default='user_specific')
 
         # 测试批量模式参数
         test_args = [
