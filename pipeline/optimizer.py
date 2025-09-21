@@ -26,7 +26,8 @@ class PromptOptimizer:
                  skip_gradient: bool = False, config: dict = None, agent_name: str = "cline"):
         self.config = config or {}
         self.agent_name = agent_name                # Target agent name for template selection
-        self.first_success_logged = False          # Track if first >60 score has been logged
+        self.first_success_logged = False          # Track if first score above threshold has been logged
+        self.current_success_threshold = 60.0      # Current success threshold for logging
         self.evaluator = evaluator or CombinedEvaluator(
             judge_model=judge_model,
             gradient_model=gradient_model,
@@ -52,7 +53,7 @@ class PromptOptimizer:
 
     def _log_first_success(self, generation: int, variant_index: int, variants_per_generation: int,
                           score: float, tool_description: str, strategy: str = "user_specific"):
-        """Log the first variant that scores above 60 points to a shared log file"""
+        """Log the first variant that scores above the success threshold to a shared log file"""
         try:
             # Calculate total variant count: (generation * variants_per_generation) + variant_index
             total_variant_count = generation * variants_per_generation + variant_index
@@ -83,7 +84,7 @@ class PromptOptimizer:
                 json.dump(log_entry, f, ensure_ascii=False)
                 f.write('\n')  # JSONL format: one JSON object per line
 
-            logger.info(f"🎯 FIRST SUCCESS >60: Agent={self.agent_name}, Model={self.target_model}, Generation {generation+1}, Variant {variant_index+1}, Total count: {total_variant_count}, Score: {score}")
+            logger.info(f"🎯 FIRST SUCCESS >{self.current_success_threshold}: Agent={self.agent_name}, Model={self.target_model}, Generation {generation+1}, Variant {variant_index+1}, Total count: {total_variant_count}, Score: {score}")
             logger.info(f"First success logged to shared file: {log_path}")
 
         except Exception as e:
@@ -140,7 +141,7 @@ class PromptOptimizer:
         self.evaluator.gradient_model = self.gradient_model
 
     def optimize_user_specific(self, input_data: InputData, max_generations: int = 10,
-                              variants_per_generation: int = 4, success_threshold: float = 0.8) -> UserAgnosticOutput:
+                              variants_per_generation: int = 4, success_threshold: float = 60) -> UserAgnosticOutput:
         """
         Optimize prompts for a specific user prompt using evolutionary approach
 
@@ -150,6 +151,9 @@ class PromptOptimizer:
             variants_per_generation: Number of mutations generated per generation
             success_threshold: Success threshold
         """
+        # Store the current success threshold for logging
+        self.current_success_threshold = success_threshold
+
         logger.info(f"Starting user-specific optimization, max {max_generations} generations, {variants_per_generation} variants per generation")
 
         if not self.target_agent_provider:
@@ -175,15 +179,15 @@ class PromptOptimizer:
             # 2. Test each variant with the specific user prompt
             tested_variants = []
             variant_index = 0  # Track current variant index in this generation
-            for variant in variants:
-                variant_data = self._test_variant(input_data.tool_name, variant, input_data)
+            for key,value in variants.items():
+                variant_data = self._test_variant(tool_name=key, tool_description=value, input_data=input_data)
                 evaluated_variant = self.evaluator.evaluate_variant(variant_data, input_data)
                 tested_variants.append(evaluated_variant)
 
                 logger.info(f"Variant {variant_index + 1} score: {evaluated_variant.combined_score:.3f} (Judge: {evaluated_variant.llm_judge_score:.3f}, Gradient: {evaluated_variant.gradient_score:.3f})")
 
-                # Check for first success above 60 points (using llm_judge_score)
-                if not self.first_success_logged and evaluated_variant.llm_judge_score >= 60:
+                # Check for first success above threshold points (using llm_judge_score)
+                if not self.first_success_logged and evaluated_variant.llm_judge_score >= success_threshold:
                     self._log_first_success(generation, variant_index, variants_per_generation,
                                           evaluated_variant.llm_judge_score, evaluated_variant.tool_description, "user_specific")
                     self.first_success_logged = True
@@ -207,7 +211,6 @@ class PromptOptimizer:
             # 3. Select best variants
             tested_variants.sort(key=lambda x: x.combined_score, reverse=True)
             best_variant = tested_variants[0]
-            best_variants = [v.tool_description for v in tested_variants[:2]]
 
             # Record best variant in history
             history.append({
@@ -226,11 +229,14 @@ class PromptOptimizer:
             # 按分数降序排列
             successful_variants.sort(key=lambda x: x["combined_score"], reverse=True)
             result_variants = [{"tool_des": v["tool_description"], "response": v["agent_response"]} for v in successful_variants]
+            return result_variants, True
         else:
-            result_variants = {
-                "tool_des": best_variants.tool_descriptions,
-                "response": best_variants.agent_response
+            result_variants = [{
+                "tool_des": best_variant.tool_descriptions,
+                "response": best_variant.agent_response
                 }
+            ]
+            return result_variants, False
 
         # 将成功变体信息附加到返回结果中
         # result = UserAgnosticOutput.from_variants(result_variants)
@@ -241,7 +247,6 @@ class PromptOptimizer:
         #     # 如果没有这个属性，我们可以动态添加
         #     result.detailed_results = successful_variants
 
-        return result_variants
 
     def optimize_user_agnostic_validated(self, input_data: InputData, max_generations: int = 10,
                                         variants_per_generation: int = 4, success_threshold: float = 0.8,
@@ -256,6 +261,9 @@ class PromptOptimizer:
             success_threshold: Success threshold for single-user tests
             multi_user_test_queries: Number of diverse queries to test promising variants with
         """
+        # Store the current success threshold for logging (convert from 0.8 scale to 100 scale for display)
+        self.current_success_threshold = success_threshold * 100 if success_threshold <= 1.0 else success_threshold
+
         logger.info(f"Starting validated user-agnostic optimization, max {max_generations} generations, "
                    f"{variants_per_generation} variants per generation, {multi_user_test_queries} test queries")
 
@@ -290,8 +298,8 @@ class PromptOptimizer:
                            f"(Judge: {evaluated_variant.llm_judge_score:.3f}, "
                            f"Gradient: {evaluated_variant.gradient_score:.3f})")
 
-                # Check for first success above 60 points (using llm_judge_score)
-                if not self.first_success_logged and evaluated_variant.llm_judge_score >= 60:
+                # Check for first success above threshold points (using llm_judge_score)
+                if not self.first_success_logged and evaluated_variant.llm_judge_score >= success_threshold:
                     self._log_first_success(generation, variant_index, variants_per_generation,
                                           evaluated_variant.llm_judge_score, evaluated_variant.tool_description, "user_agnostic")
                     self.first_success_logged = True
@@ -431,6 +439,9 @@ class PromptOptimizer:
             success_threshold: Success threshold for individual model tests
             min_model_success_rate: Minimum success rate across models to consider model-agnostic
         """
+        # Store the current success threshold for logging (convert from 0.8 scale to 100 scale for display)
+        self.current_success_threshold = success_threshold * 100 if success_threshold <= 1.0 else success_threshold
+
         logger.info(f"Starting model-agnostic optimization, max {max_generations} generations, {variants_per_generation} variants per generation")
 
         if not self.auxiliary_provider:
@@ -480,8 +491,8 @@ class PromptOptimizer:
 
                 logger.info(f"Variant {variant_index + 1} model-agnostic score: {avg_score:.3f}, Success rate: {success_rate:.2f}, Max judge score: {max_judge_score:.1f}")
 
-                # Check for first success above 60 points (using max judge score across models)
-                if not self.first_success_logged and max_judge_score >= 60:
+                # Check for first success above threshold points (using max judge score across models)
+                if not self.first_success_logged and max_judge_score >= success_threshold:
                     self._log_first_success(generation, variant_index, variants_per_generation,
                                           max_judge_score, variant, "model_agnostic")
                     self.first_success_logged = True
@@ -560,7 +571,12 @@ class PromptOptimizer:
             # s_fixed = response.replace('[', '{').replace(']', '}')
 
             data = json.loads(response)
-            print(data)
+            # print(data)
+            # print(type(data))
+            # print(data[0])
+            # temp = data[0]
+            # print(f"data.key: {data.keys()}")
+            # print(f"data.value: {data.values()}")
             return data
 
             # Debug logging
@@ -1098,7 +1114,7 @@ Parameters:
                 input_data,
                 kwargs.get('max_generations', 10),
                 kwargs.get('variants_per_generation', 4),
-                kwargs.get('success_threshold', 0.8)
+                kwargs.get('success_threshold', 60.0)
             )
         elif strategy == "user_agnostic":
             return self.optimize_user_agnostic(

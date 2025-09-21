@@ -6,6 +6,9 @@ api_keys:
 
 data_path: "/home/zesen/AutoPI/data"
 
+# Success threshold for optimization (default: 60 points)
+success_threshold: 60
+
 # LMSYS dataset configuration for user-agnostic testing
 lmsys_dataset_path: "/home/zesen/AutoPI/data/lmsys_queries.json"
 
