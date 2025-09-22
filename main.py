@@ -414,6 +414,12 @@ def main():
     parser.add_argument('--skip-gradient', action='store_true', default=True,
                        help='Skip gradient calculation entirely (only use LLM judge) (default: True)')
 
+    # Dataset options
+    parser.add_argument('--use-huggingface', action='store_true', default=False,
+                       help='Use Hugging Face datasets for LMSYS data (default: False)')
+    parser.add_argument('--max-samples', type=int, default=100,
+                       help='Maximum number of samples to load from dataset (default: 100)')
+
     # Output options
     parser.add_argument('--output', type=str,
                        help='Path to save optimization results')
