@@ -181,11 +181,13 @@ class PromptOptimizer:
 
             # 2. Test each variant with the specific user prompt
             tested_variants = []
+            tested_variants_with_names = []  # Store (tool_name, evaluated_variant) pairs
             variant_index = 0  # Track current variant index in this generation
             for key,value in variants.items():
                 variant_data = self._test_variant(tool_name=key, tool_description=value, input_data=input_data)
                 evaluated_variant = self.evaluator.evaluate_variant(variant_data, input_data)
                 tested_variants.append(evaluated_variant)
+                tested_variants_with_names.append((key, evaluated_variant))  # Store tool_name with variant
 
                 logger.info(f"Variant {variant_index + 1} score: {evaluated_variant.combined_score:.3f} (Judge: {evaluated_variant.llm_judge_score:.3f}, Gradient: {evaluated_variant.gradient_score:.3f})")
 
@@ -199,6 +201,7 @@ class PromptOptimizer:
                 if evaluated_variant.combined_score >= success_threshold:
                     successful_variant_info = {
                         "generation": generation + 1,
+                        "tool_name": key,
                         "tool_description": evaluated_variant.tool_description,
                         "combined_score": evaluated_variant.combined_score,
                         "llm_judge_score": evaluated_variant.llm_judge_score,
@@ -217,8 +220,8 @@ class PromptOptimizer:
                 variant_index += 1
 
             # 3. Select best variants
-            tested_variants.sort(key=lambda x: x.combined_score, reverse=True)
-            best_variant = tested_variants[0]
+            tested_variants_with_names.sort(key=lambda x: x[1].combined_score, reverse=True)
+            best_tool_name, best_variant = tested_variants_with_names[0]
 
             # Record best variant in history
             history.append({
@@ -236,10 +239,11 @@ class PromptOptimizer:
         if successful_variants:
             # 按分数降序排列
             successful_variants.sort(key=lambda x: x["combined_score"], reverse=True)
-            result_variants = [{"tool_des": v["tool_description"], "response": v["agent_response"]} for v in successful_variants]
+            result_variants = [{"tool_name": v["tool_name"], "tool_des": v["tool_description"], "response": v["agent_response"]} for v in successful_variants]
             return result_variants, True
         else:
             result_variants = [{
+                "tool_name": best_tool_name,
                 "tool_des": best_variant.tool_description,
                 "response": best_variant.agent_response
                 }
@@ -257,12 +261,12 @@ class PromptOptimizer:
 
 
     def _generate_variants_user_specific(self, input_data: InputData, seed_tool_des: str,
-                                        history: List[Dict], num_variants: int) -> List[str]:
+                                        history: List[Dict], num_variants: int) -> List[dict]:
         """Generate mutations using user-specific prompt"""
         # Load user-specific system prompt
         data_path = self.config.get('data_path', './data')
         try:
-            with open(f"{data_path}/user_specific_instruction_prompt.txt", 'r') as f:
+            with open(f"{data_path}/user_agnostic.txt", 'r') as f:
                 mutator_system_prompt = f.read().strip()
         except FileNotFoundError:
             # Fallback to inline user-specific prompt
@@ -333,6 +337,7 @@ class PromptOptimizer:
             # 4. Create variant data (store original tool description, not wrapped)
             variant_data = VariantData(
                 tool_description=tool_description,  # Store original for tracking
+                tool_name=tool_name, # Store tool name
                 llm_judge_score=0.0,  # Will be filled by evaluator
                 gradient_score=0.0,   # Will be filled by evaluator
                 combined_score=0.0,   # Will be filled by evaluator

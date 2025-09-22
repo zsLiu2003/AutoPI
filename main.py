@@ -39,6 +39,7 @@ def save_results(results, output_path: str, agent_name: str, model_name: str):
         for i, variant in enumerate(results):
             output_data.append({
                 "variant_index": i + 1,
+                "tool_name": variant.get("tool_name", ""),
                 "tool_description": variant.get("tool_des", ""),
                 "agent_response": variant.get("response", "")
             })
@@ -226,6 +227,8 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
 
                 variants_threshold_plus_this_command = 0
                 if flag:
+                    # results中的每个variant都包含tool_name和tool_des信息
+                    # 确保保存完整的tool_name和tool_description键值对
                     all_accumulated_variants.extend(results)
                     variants_threshold_plus_this_command = len(results)
 
