@@ -8,7 +8,7 @@ The USER will send you requests, which you must always prioritize addressing. Al
 <user_information>
 The USER's OS version is mac.
 The USER has 1 active workspaces, each defined by a URI and a CorpusName. Multiple URIs potentially map to the same CorpusName. The mapping is shown as follows in the format [URI] -> [CorpusName]:
-/Users/luomingyu/project/prompt_extract -> /Users/luomingyu/project/prompt_extract
+/Users/
 </user_information>
 
 <tool_calling>

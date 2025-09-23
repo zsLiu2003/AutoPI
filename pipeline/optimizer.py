@@ -352,6 +352,7 @@ class PromptOptimizer:
             logger.error(f"Variant testing failed: {e}")
             return VariantData(
                 tool_description=tool_description,
+                tool_name=tool_name,
                 llm_judge_score=0.0,
                 gradient_score=0.0,
                 combined_score=0.0,

@@ -34,10 +34,11 @@ class InputData:
             # If no injection tag found, append to the end
             return f"{self.system_prompt}\n\n{tool_des}"
 
-@dataclass 
+@dataclass
 class VariantData:
     """单个variant的数据结构"""
     tool_description: str
+    tool_name: str
     llm_judge_score: float
     gradient_score: float
     combined_score: float

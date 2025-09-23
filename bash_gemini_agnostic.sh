@@ -9,7 +9,7 @@ python main.py \
   --output "/home/zesen/AutoPI/data/user_agnostic" \
   --auxiliary-model "gpt-5" \
   --judge-model "gpt-5" \
-  --target-model "claude-sonnet-4-20250514" \
+  --target-model "gemini-2.5-pro" \
   --gradient-model "gpt2" \
-  --target-agent "cursor" \
+  --target-agent "windsurf" \
   --verbose

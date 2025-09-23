@@ -1,5 +1,5 @@
-target_models=("gemini-2.5-pro" "gpt-5")
-target_agents=("cline" "cursor" "copilot" "trae" "windsurf")
+target_models=("gpt-5")
+target_agents=("cursor" "copilot" "trae" "windsurf")
 
 for model in "${target_models[@]}"; do
   for agent in "${target_agents[@]}"; do
