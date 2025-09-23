@@ -1,5 +1,5 @@
 target_models=("grok-4")
-target_agents=("cline" "cursor" "copilot" "trae" "windsurf")
+target_agents=("cline" "copilot" "trae")
 
 for model in "${target_models[@]}"; do
   for agent in "${target_agents[@]}"; do

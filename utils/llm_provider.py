@@ -10,7 +10,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 BASE_URL = "https://api.cxhao.com"
-API_KEY = "sk-TRRdrKYwo1idvAdARhdQhk6DNY5bo0Agnha7foM8IqmeNMUo"
+API_KEY = "sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz"
 ENDPOINT = "/v1/chat/completions"
 
 def get_api_key(model_name: str) -> str:
