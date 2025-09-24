@@ -11,5 +11,5 @@ python main.py \
   --judge-model "gpt-5" \
   --target-model "claude-sonnet-4-20250514" \
   --gradient-model "gpt2" \
-  --target-agent "cline" \
+  --target-agent "copilot" \
   --verbose

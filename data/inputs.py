@@ -48,7 +48,12 @@ class VariantData:
 def get_system_prompt(agent_name: str, config: dict) -> str:
     """
     retrieves the system prompt and expected output for a given agent from configuration files.
+    Special case: if agent_name is 'empty' or 'none', returns empty system prompt for testing.
     """
+    # Special case: empty system prompt for testing
+    if agent_name.lower() in ['empty', 'none']:
+        return "", "Command executed successfully"
+
     data_path = config.get("data_path", "./data")
     system_prompt_file = f"{data_path}/{agent_name}.txt"
     expected_output_file = f"{data_path}/{agent_name}_output.txt"
