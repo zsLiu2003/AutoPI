@@ -9,8 +9,8 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-BASE_URL = "https://api.cxhao.com"
-API_KEY = "sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz"
+BASE_URL = "https://api.bianxie.ai"
+API_KEY = "sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR"  # 默认API Key，建议在config.yaml中配置
 ENDPOINT = "/v1/chat/completions"
 
 def get_api_key(model_name: str) -> str:
@@ -35,8 +35,8 @@ class TestLLMProvider(LLMProvider):
         self.headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {api_key}",
-            "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-            "Content-Type": "application/json"
+            # "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+            # "Content-Type": "application/json"
         }
         
         # 创建日志目录
@@ -89,7 +89,7 @@ class TestLLMProvider(LLMProvider):
                 response = requests.post(
                     self.api_url,
                     headers=self.headers,
-                    data=json.dumps(payload),
+                    json = payload,
                     timeout=self.timeout
                 )
 

@@ -2,6 +2,7 @@
 Dataset loader for LMSYS user queries to test user-agnostic prompt injection
 """
 
+import csv
 import json
 import random
 from typing import List, Dict, Any, Optional
@@ -39,8 +40,11 @@ class LMSYSDatasetLoader:
             except Exception as e:
                 logger.warning(f"Failed to load from Hugging Face: {e}, falling back to local file")
         
-        # Fallback to local file
-        self._load_from_local_file()
+        # Fallback to local dataset file
+        if str(self.dataset_path).lower().endswith('.csv'):
+            self._load_from_csv()
+        else:
+            self._load_from_local_file()
     
     def _load_from_huggingface(self):
         """Load LMSYS Chat-1M dataset from Hugging Face"""
@@ -112,6 +116,63 @@ class LMSYSDatasetLoader:
             self._load_default_queries()
         except Exception as e:
             logger.error(f"Error loading local LMSYS dataset: {e}, using default queries")
+            self._load_default_queries()
+
+    def _load_from_csv(self):
+        """Load user queries from a CSV file supporting multi-line fields"""
+        try:
+            max_samples = max(1, self.max_samples or 100)
+            reservoir: List[str] = []
+            seen = set()
+            total_valid = 0
+
+            with open(self.dataset_path, 'r', encoding='utf-8', newline='') as csvfile:
+                cleaned_lines = (line.replace('\0', '') for line in csvfile)
+                reader = csv.DictReader(cleaned_lines)
+
+                # Handle files without headers by falling back to the first column
+                fieldnames = reader.fieldnames or []
+                default_key = fieldnames[0] if fieldnames else None
+
+                for row in reader:
+                    query = None
+                    if 'user_query' in row and row['user_query']:
+                        query = row['user_query']
+                    elif default_key and row.get(default_key):
+                        query = row[default_key]
+
+                    if not query:
+                        continue
+
+                    query = str(query).strip()
+                    if not self._is_valid_query(query) or query in seen:
+                        continue
+
+                    seen.add(query)
+                    total_valid += 1
+
+                    if len(reservoir) < max_samples:
+                        reservoir.append(query)
+                    else:
+                        replace_index = random.randrange(total_valid)
+                        if replace_index < max_samples:
+                            reservoir[replace_index] = query
+
+            if not reservoir:
+                logger.warning(f"No valid queries found in CSV at {self.dataset_path}, using defaults")
+                self._load_default_queries()
+                return
+
+            self.queries = reservoir
+            logger.info(
+                f"Loaded {len(self.queries)} user queries from CSV: {self.dataset_path} (processed {total_valid} valid entries)"
+            )
+
+        except FileNotFoundError:
+            logger.warning(f"CSV dataset not found at {self.dataset_path}, using default queries")
+            self._load_default_queries()
+        except Exception as e:
+            logger.error(f"Error loading CSV dataset ({self.dataset_path}): {e}, using default queries")
             self._load_default_queries()
     
     def _is_valid_query(self, query: str) -> bool:

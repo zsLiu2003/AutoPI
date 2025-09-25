@@ -163,7 +163,7 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
         target_agent = get_target_agent_name(args)
         system_prompt, expected_output = get_system_prompt(target_agent, config)
 
-        if not system_prompt:
+        if system_prompt is None or (not system_prompt and target_agent.lower() not in ['empty', 'none']):
             logger.error(f"Failed to load system prompt from {target_agent}.txt")
             return {}
 
@@ -277,7 +277,7 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
         target_agent = get_target_agent_name(args)
         system_prompt, expected_output = get_system_prompt(target_agent, config)
 
-        if not system_prompt:
+        if system_prompt is None or (not system_prompt and target_agent.lower() not in ['empty', 'none']):
             logger.error(f"Failed to load system prompt from {target_agent}.txt")
             return False
 

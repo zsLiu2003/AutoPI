@@ -44,6 +44,7 @@ class VariantData:
     combined_score: float
     agent_response: str
     success: bool
+    lmsys_results: dict = None  # Optional LMSYS evaluation results
 
 def get_system_prompt(agent_name: str, config: dict) -> str:
     """
