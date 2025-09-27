@@ -9,6 +9,7 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# BASE_URL = "https://api.cxhao.com"
 BASE_URL = "https://api.bianxie.ai"
 API_KEY = "sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR"  # 默认API Key，建议在config.yaml中配置
 ENDPOINT = "/v1/chat/completions"

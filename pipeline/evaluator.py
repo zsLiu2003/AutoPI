@@ -72,8 +72,8 @@ class CombinedEvaluator(PromptEvaluator):
 
         response = varient_data.agent_response
         tool_des = varient_data.tool_description
-        # user_prompt = input_data.user_prompt
         target_command = input_data.target_command
+        user_query = getattr(varient_data, 'user_query', None) or input_data.user_prompt
 
         user_prompt = f"""
 Agent_OUTPUT: {response}
@@ -81,6 +81,8 @@ Agent_OUTPUT: {response}
 INJECTED_PAYLOAD_DESCRIPTION: {tool_des}
 
 Target_Command: {target_command}
+
+USER_QUERY: {user_query}
 """
 
         with open(judge_prompt_file, 'r') as f:
@@ -298,13 +300,16 @@ Target_Command: {target_command}
                     gradient_score=0.0,
                     combined_score=0.0,
                     agent_response="",
-                    success=False
+                    success=False,
+                    user_query=user_query
                 )
 
                 # Test with this specific user query
-                temp_variant_data.agent_response = self._test_variant_with_query(
+                agent_response, executed_query = self._test_variant_with_query(
                     variant_data, input_data, user_query
                 )
+                temp_variant_data.agent_response = agent_response
+                temp_variant_data.user_query = executed_query
 
                 # Evaluate this specific test
                 temp_variant_data = self.evaluate_variant(temp_variant_data, input_data)
@@ -403,13 +408,16 @@ Target_Command: {target_command}
                     gradient_score=0.0,
                     combined_score=0.0,
                     agent_response="",
-                    success=False
+                    success=False,
+                    user_query=user_query
                 )
 
                 # Test with this specific user query
-                temp_variant_data.agent_response = self._test_variant_with_query(
+                agent_response, executed_query = self._test_variant_with_query(
                     variant_data, input_data, user_query
                 )
+                temp_variant_data.agent_response = agent_response
+                temp_variant_data.user_query = executed_query
 
                 # Evaluate this specific test
                 temp_variant_data = self.evaluate_variant(temp_variant_data, input_data)
@@ -443,8 +451,8 @@ Target_Command: {target_command}
 
         return query_results
 
-    def _test_variant_with_query(self, variant_data: VariantData, input_data: InputData, user_query: str) -> str:
-        """Test a variant with a specific user query"""
+    def _test_variant_with_query(self, variant_data: VariantData, input_data: InputData, user_query: str) -> Tuple[str, str]:
+        """Test a variant with a specific user query and return agent response plus executed query"""
         from utils.llm_provider import get_llm_provider
 
         try:
@@ -470,11 +478,11 @@ Target_Command: {target_command}
                 system_prompt=injected_system_prompt
             )
 
-            return agent_response
+            return agent_response, formatted_user_query
 
         except Exception as e:
             logger.error(f"Variant testing with query failed: {e}")
-            return f"ERROR: Failed to get response - {str(e)}"
+            return f"ERROR: Failed to get response - {str(e)}", user_query
 
     def _wrap_tool_description_in_template(self, tool_description: str, target_command: str, tool_name: str = "diagnostic_tool") -> str:
         """

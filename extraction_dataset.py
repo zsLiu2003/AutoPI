@@ -34,23 +34,30 @@ keywords = [
     "debug", "compile", "program", "algorithm"
 ]
 
+# ---- Step 4. Compile regex for whole-word matching ----
+# (?<!\w) ensures no letter/number before keyword; (?!\w) ensures none after
+# This works for normal words and also for c++ / c#
+pattern = re.compile(
+    r"(?<!\w)(" + "|".join(map(re.escape, keywords)) + r")(?!\w)",
+    re.IGNORECASE
+)
+
 def is_coding_example(example):
     query = example["user_query"]
     if not isinstance(query, str):
         return False
-    q = query.lower()
-    return any(kw in q for kw in keywords)
+    return bool(pattern.search(query))
 
 print("Filtering coding-related queries...")
 coding_ds = user_ds.filter(is_coding_example)
 print("Found coding queries:", len(coding_ds))
 
-# ---- Step 4. Print sample ----
+# ---- Step 5. Print sample ----
 print("\n=== 10 code-related prompts (random) ===")
 for row in coding_ds.shuffle(seed=42).select(range(10)):
     print("-", row["user_query"])
 
-# ---- Step 5. Save to CSV ----
-output_path = "coding_queries.csv"
-coding_ds.to_csv(output_path, escapechar="\\")  # 添加 escapechar
+# ---- Step 6. Save to CSV ----
+output_path = "coding_queries2.csv"
+coding_ds.to_csv(output_path, escapechar="\\")
 print(f"\nSaved filtered queries to {output_path}")

@@ -27,7 +27,7 @@ variant_generation:
 
 # LMSYS evaluation settings
 lmsys_evaluation:
-  enabled: true  # Enable LMSYS multi-query evaluation
+  enabled: false  # Disable LMSYS sampling; rely on explicit user prompts
   num_queries: 2  # Number of queries to sample from LMSYS dataset
   success_rate_threshold: 1.0  # 80% of queries must pass threshold for early stop
   min_query_score_threshold: 60  # Minimum score threshold for individual queries

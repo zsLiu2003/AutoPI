@@ -409,7 +409,8 @@ class PromptOptimizer:
                 gradient_score=0.0,   # Will be filled by evaluator
                 combined_score=0.0,   # Will be filled by evaluator
                 agent_response=agent_response,
-                success=False         # Will be determined by evaluator
+                success=False,        # Will be determined by evaluator
+                user_query=user_prompt
             )
 
             logger.info(f"Agent response length: {len(agent_response)}")
@@ -424,7 +425,8 @@ class PromptOptimizer:
                 gradient_score=0.0,
                 combined_score=0.0,
                 agent_response="ERROR: Failed to get response",
-                success=False
+                success=False,
+                user_query=input_data.user_prompt
             )
     
     def _wrap_tool_description_in_template(self, tool_description: str, target_command: str, tool_name: str = "diagnostic_tool") -> str:
@@ -567,16 +569,10 @@ Parameters:
 
         # Get LMSYS queries
         lmsys_config = self.config.get('lmsys_evaluation', {})
-        num_queries = lmsys_config.get('num_queries', 10)
+        # Use the user-provided prompt directly to avoid random sampling
+        lmsys_queries = [input_data.user_prompt]
 
-        # Sample queries from LMSYS dataset
-        lmsys_queries = self.dataset_loader.get_diverse_queries(
-            num_queries=num_queries,
-            include_original=True,
-            original_query=input_data.user_prompt
-        )
-
-        logger.info(f"Testing with {len(lmsys_queries)} LMSYS queries")
+        # logger.info("Testing with user-provided query only (LMSYS sampling disabled)")
 
         # Use evaluator's LMSYS evaluation method
         evaluated_variant, query_results = self.evaluator.evaluate_variant_with_lmsys_queries(

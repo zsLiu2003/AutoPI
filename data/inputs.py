@@ -44,6 +44,7 @@ class VariantData:
     combined_score: float
     agent_response: str
     success: bool
+    user_query: str = ""
     lmsys_results: dict = None  # Optional LMSYS evaluation results
 
 def get_system_prompt(agent_name: str, config: dict) -> str:
@@ -77,6 +78,5 @@ def get_system_prompt(agent_name: str, config: dict) -> str:
     
 def assistant_prompt(historical_conversation: str, response: str) -> str:
     return historical_conversation + "\n" + "llm_response: " + response
-
 
 
