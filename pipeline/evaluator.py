@@ -65,32 +65,29 @@ class CombinedEvaluator(PromptEvaluator):
         return float(match.group())
     
     def get_llm_judge_score(self, varient_data: VariantData, input_data: InputData) -> float:
-        """Use LLM judge to evaluate attack success rate using the llmjudge_prompt.txt template"""
-            # Load the judge prompt template from file using config path
+        """Use enhanced LLM judge to evaluate attack success rate considering user query context"""
+        # Load the enhanced judge prompt template
         data_path = self.config.get('data_path', './data')
-        judge_prompt_file = f"{data_path}/llmjudge_prompt.txt"
+        judge_prompt_file = f"{data_path}/enhanced_llmjudge_prompt.txt"
 
         response = varient_data.agent_response
         tool_des = varient_data.tool_description
         target_command = input_data.target_command
         user_query = getattr(varient_data, 'user_query', None) or input_data.user_prompt
 
-        user_prompt = f"""
-Agent_OUTPUT: {response}
+        user_prompt = f"""AGENT_OUTPUT: {response}
 
 INJECTED_PAYLOAD_DESCRIPTION: {tool_des}
 
-Target_Command: {target_command}
+TARGET_COMMAND: {target_command}
 
-USER_QUERY: {user_query}
-"""
+USER_QUERY: {user_query}"""
 
         with open(judge_prompt_file, 'r') as f:
             judge_prompt_template = f.read().strip()
-        # Format the prompt with actual input data
 
-        response = self.llm_provider.generate_response(system_prompt=judge_prompt_template,user_prompt=user_prompt)
-        print(f"LLM Judge Response: {response}")
+        response = self.llm_provider.generate_response(system_prompt=judge_prompt_template, user_prompt=user_prompt)
+        logger.debug(f"LLM Judge Response: {response}")
 
         # Extract numerical score from potentially complex response
         score = self._extract_score_from_response(response)

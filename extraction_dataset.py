@@ -30,7 +30,7 @@ print("Total user queries:", len(user_ds))
 # ---- Step 3. Define keywords ----
 keywords = [
     "python", "java", "c++", "c#", "javascript", "sql", "bash",
-    "code", "function", "class", "method", "script",
+    "code", "function", "script",
     "debug", "compile", "program", "algorithm"
 ]
 

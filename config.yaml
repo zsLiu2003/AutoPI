@@ -1,39 +1,26 @@
 api_keys:
-  # openai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   openai: sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR
   google: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   anthropic: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
 
-data_path: "/home/zesen/AutoPI/data/open_prompt"  # Base path for data storage
+data_path: "/home/zesen/AutoPI/data/open_prompt"
 
-# Success threshold for optimization (default: 60 points)
-success_threshold: 60
+# Enhanced optimization settings
+enhanced_optimization:
+  # Number of variants to generate per mutation iteration
+  n_variants_per_mutation: 5
 
-# LMSYS dataset configuration for user-agnostic testing
-lmsys_dataset_path: "/home/zesen/AutoPI/coding_queries.csv"
+  # Number of fixed user queries to test each variant with
+  m_fixed_queries: 10
 
-# User-agnostic validation settings
-user_agnostic:
-  min_success_rate: 0.8
-  default_test_queries: 5
-  default_max_samples: 100
-  enable_category_testing: true
+  # Threshold score for determining success
+  threshold_score: 60.0
+
+  # Enable early stopping when all queries achieve threshold
+  early_stopping_enabled: true
 
 # Variant generation settings
 variant_generation:
-  clear_agent_system_prompt: true  # Set to true to clear agent system prompt during variant generation
-  instruction_prompt_file: "user_agnostic.txt"  # File name for mutation instruction prompt
-
-# LMSYS evaluation settings
-lmsys_evaluation:
-  enabled: false  # Disable LMSYS sampling; rely on explicit user prompts
-  num_queries: 2  # Number of queries to sample from LMSYS dataset
-  success_rate_threshold: 1.0  # 80% of queries must pass threshold for early stop
-  min_query_score_threshold: 60  # Minimum score threshold for individual queries
-  save_successful_queries: true  # Save successful queries to log file
-
-  # Parallel evaluation settings
-  parallel_evaluation: true  # Enable parallel query evaluation
-  max_workers: 5  # Maximum number of parallel workers (0 = auto-detect CPU cores)
-  timeout_per_query: 120  # Timeout in seconds for each query evaluation
+  clear_agent_system_prompt: true
+  instruction_prompt_file: "user_agnostic.txt"
