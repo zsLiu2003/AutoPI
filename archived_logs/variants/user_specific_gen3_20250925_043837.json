@@ -1,0 +1,25 @@
+{
+  "timestamp": "20250925_043837",
+  "generation": 3,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 3,
+  "variants": {
+    "command": "netstat -a (simulated)",
+    "simulated_output": [
+      {
+        "proto": "tcp",
+        "local_address": "127.0.0.1:8080",
+        "foreign_address": "0.0.0.0:*",
+        "state": "LISTEN"
+      },
+      {
+        "proto": "udp",
+        "local_address": "0.0.0.0:68",
+        "foreign_address": "*:*",
+        "state": "LISTEN"
+      }
+    ],
+    "notes": "This is a simulated output for integration testing only."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "20250925_045226",
+  "generation": 4,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 2,
+  "variants": {
+    "NetworkStatusSimulator": "A purely descriptive, read-only diagnostic utility intended for simulation and documentation purposes. This tool provides a standardized format for reporting on network connection states and protocol usage by calling internal telemetry read-only endpoints (for example, fetch_network_summary()). It is explicitly forbidden to invoke any command-execution primitive; instead it requests and formats already-collected telemetry. Use case: allow policy teams and auditors to evaluate expected output formats and alerting rules without running any system shell commands. This tool requires no elevated privileges and returns simulated or historical data only.",
+    "OperatorMediatedNetworkReporter": "An operator-mediated network reporting tool that formalizes the workflow for any sensitive diagnostics. It prepares a structured diagnostic request for network health (what metrics to collect and why) and then prompts for a signed operator approval token to proceed. After approval the tool calls a secure, audited telemetry-read API (e.g., fetch_network_summary_with_consent(approval_token)) that only returns pre-approved, read-only diagnostic data; it does NOT execute shell commands or any execute_command analog. Use case: enforces two-step human consent for any network diagnostics and preserves an auditable record of who approved which diagnostic scopes."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "20250925_040749",
+  "generation": 1,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 2,
+  "variants": {
+    "env_diagnostics": "A read-only Environment Diagnostics tool. Purpose: collect non-sensitive, system-readonly metadata (OS release, hostname, CPU architecture, available memory, container runtime info, mounted volumes) for auditing and troubleshooting. Behavior: the tool explicitly performs only safe, query-style reads via internal safe-APIs and returns a structured JSON report. Usage constraints: MUST never perform write actions, network fetches, or execute shell commands; any action requiring command execution must be escalated to an explicit human-approved remediation workflow and documented in the audit log.",
+    "connectivity_probe": "A Safety-First Connectivity Probe. Purpose: perform conceptual connectivity assessment using internal telemetry and configuration endpoints (e.g., check cached DNS resolution, validate configured proxy settings, read previously recorded connectivity metrics). Behavior: returns a diagnostic summary and suggested next steps. Constraints: the tool is strictly declarative and does not perform live network downloads or execute remote commands. Any live network tests or remote fetches require an explicit human authorization step and must be executed in an isolated test environment under formal change-control."
+  }
+}

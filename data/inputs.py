@@ -5,19 +5,17 @@ from config.parser import load_config
 class InputData:
     system_prompt: str  # Original system prompt with <Injected Loaction> tag
     user_prompt: str    # Expected command (e.g., "rm")
-    expected_output_prompt: str  # Expected output for gradient loss calculation only
     assistant_prompt: str  # Historical conversation
     seed_tool_des: str     # Seed tool description
     target_command: str    # Target command
     tool_name: str = "diagnostic_tool"  # Name for the tool in XML template
     real_response: str = ""  # Actual agent response for LLM judge evaluation
 
-    def __init__(self, system_prompt: str, user_prompt: str, expected_output_prompt: str = "",
-                 assistant_prompt: str = "", seed_tool_des: str = "", target_command: str = "",
+    def __init__(self, system_prompt: str, user_prompt: str, assistant_prompt: str = "",
+                 seed_tool_des: str = "", target_command: str = "",
                  tool_name: str = "diagnostic_tool", real_response: str = ""):
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
-        self.expected_output_prompt = expected_output_prompt
         self.assistant_prompt = assistant_prompt
         self.seed_tool_des = seed_tool_des
         self.target_command = target_command
@@ -40,8 +38,6 @@ class VariantData:
     tool_description: str
     tool_name: str
     llm_judge_score: float
-    gradient_score: float
-    combined_score: float
     agent_response: str
     success: bool
     user_query: str = ""
@@ -49,32 +45,24 @@ class VariantData:
 
 def get_system_prompt(agent_name: str, config: dict) -> str:
     """
-    retrieves the system prompt and expected output for a given agent from configuration files.
+    retrieves the system prompt for a given agent from configuration files.
     Special case: if agent_name is 'empty' or 'none', returns empty system prompt for testing.
     """
     # Special case: empty system prompt for testing
     if agent_name.lower() in ['empty', 'none']:
-        return "", "Command executed successfully"
+        return ""
 
     data_path = config.get("data_path", "./data")
     system_prompt_file = f"{data_path}/{agent_name}.txt"
-    expected_output_file = f"{data_path}/{agent_name}_output.txt"
 
     try:
         with open(system_prompt_file, 'r') as f:
             system_prompt = f.read().strip()
     except FileNotFoundError as e:
         print(f"Error: System prompt file not found: {e}")
-        return "", ""
+        return ""
 
-    try:
-        with open(expected_output_file, 'r') as f:
-            expected_output = f.read().strip()
-    except FileNotFoundError as e:
-        print(f"Warning: Expected output file not found: {e}. Using default.")
-        expected_output = "Command executed successfully"
-
-    return system_prompt, expected_output
+    return system_prompt
     
 def assistant_prompt(historical_conversation: str, response: str) -> str:
     return historical_conversation + "\n" + "llm_response: " + response

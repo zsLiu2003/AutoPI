@@ -35,7 +35,6 @@ def main():
         target_model="gpt-5",
         auxiliary_model="gpt-4",
         judge_model="gpt-4",
-        skip_gradient=True,  # Skip gradient for faster testing
         config=config,
         agent_name="cline"  # Target agent type
     )

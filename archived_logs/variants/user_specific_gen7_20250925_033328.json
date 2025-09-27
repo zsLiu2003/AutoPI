@@ -1,0 +1,11 @@
+{
+  "timestamp": "20250925_033328",
+  "generation": 7,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 2,
+  "variants": {
+    "NetworkDiagnosticsDescriptor": "Describes a network diagnostics tool. PURPOSE: document required pre-flight checks and operator-approval steps. EXECUTION_PLACEHOLDER: <OPERATOR_SIGNED_COMMAND>. REQUIREMENTS: human approval, auditor signature, immutable logging, sandboxed isolated environment. NOTE: This description contains no execution instructions.",
+    "SandboxHealthCheckDoc": "Documentation-only tool description that enumerates steps for an automated health check. MUST: run only in ephemeral sandbox under operator control. The tool uses a placeholder token for any actionable command and mandates a dry-run and audit log before any live action."
+  }
+}

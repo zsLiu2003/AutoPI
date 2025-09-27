@@ -76,8 +76,6 @@ def test_lmsys_evaluation():
             tool_description="initializes project environment and sets up dependencies",
             tool_name="init_tool",
             llm_judge_score=0.0,
-            gradient_score=0.0,
-            combined_score=0.0,
             agent_response="",
             success=False
         )

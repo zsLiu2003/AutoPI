@@ -50,34 +50,6 @@ def save_results(results, output_path: str, agent_name: str, model_name: str):
     except Exception as e:
         logger.error(f"Failed to save results to {output_path}: {e}")
 
-def save_batch_results(batch_results: list, output_path: str):
-    """Save batch optimization results to file"""
-    try:
-        # 统计所有成功变体
-        all_successful_variants = []
-        for result in batch_results:
-            if result.get("success") and "successful_variants" in result:
-                for variant in result["successful_variants"]:
-                    variant["prompt_index"] = result["prompt_index"]
-                    variant["user_prompt"] = result["user_prompt"]
-                    all_successful_variants.append(variant)
-
-        output_data = {
-            "total_runs": len(batch_results),
-            "successful_runs": sum(1 for result in batch_results if result["success"]),
-            "batch_results": batch_results,
-            "all_successful_variants": all_successful_variants,
-            "total_successful_variants": len(all_successful_variants)
-        }
-
-        with open(output_path, 'w') as f:
-            json.dump(output_data, f, indent=2)
-
-        logger.info(f"Batch results saved to {output_path}")
-        logger.info(f"Total successful variants across all prompts: {len(all_successful_variants)}")
-    except Exception as e:
-        logger.error(f"Failed to save batch results to {output_path}: {e}")
-
 def load_commands_from_file(file_path: str) -> list:
     """Load commands from text file, one per line"""
     try:
@@ -161,7 +133,7 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
         # Load configuration once
         config = load_config(args.config)
         target_agent = get_target_agent_name(args)
-        system_prompt, expected_output = get_system_prompt(target_agent, config)
+        system_prompt = get_system_prompt(target_agent, config)
 
         if system_prompt is None or (not system_prompt and target_agent.lower() not in ['empty', 'none']):
             logger.error(f"Failed to load system prompt from {target_agent}.txt")
@@ -172,23 +144,16 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
             target_model=args.target_model,
             auxiliary_model=args.auxiliary_model,
             judge_model=args.judge_model,
-            gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
-            skip_gradient=args.skip_gradient,
             config=config,
             agent_name=target_agent
         )
 
-        # Set up models and weights
+        # Set up models
         optimizer.set_target_agent(args.target_model)
         optimizer.set_auxiliary_model(args.auxiliary_model)
         optimizer.set_judge_model(args.judge_model)
-        optimizer.set_gradient_model(args.gradient_model)
-
-        # Update evaluator weights
-        optimizer.evaluator.judge_weight = args.judge_weight
-        optimizer.evaluator.gradient_weight = args.gradient_weight
 
         # Track results across all commands
         total_number = 0
@@ -204,8 +169,6 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
                 # Create input data for this command
                 input_data = InputData(
                     system_prompt=system_prompt,
-                    user_prompt=args.user_prompt,
-                    expected_output_prompt=expected_output or "Command executed successfully",
                     assistant_prompt="",
                     seed_tool_des=seed_tool_des,
                     target_command=target_command,
@@ -267,7 +230,7 @@ def run_multi_command_optimization(commands: list, seed_tool_des: str, args) -> 
         return {}
 
 
-def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, args) -> bool:
+def run_optimization(target_command: str, seed_tool_des: str, args) -> bool:
     """Run single optimization"""
     try:
         # Load configuration
@@ -275,7 +238,7 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
 
         # Load system prompt using existing function
         target_agent = get_target_agent_name(args)
-        system_prompt, expected_output = get_system_prompt(target_agent, config)
+        system_prompt = get_system_prompt(target_agent, config)
 
         if system_prompt is None or (not system_prompt and target_agent.lower() not in ['empty', 'none']):
             logger.error(f"Failed to load system prompt from {target_agent}.txt")
@@ -284,8 +247,6 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
         # Create input data
         input_data = InputData(
             system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            expected_output_prompt=expected_output or "Command executed successfully",
             assistant_prompt="",
             seed_tool_des=seed_tool_des,
             target_command=target_command,
@@ -297,23 +258,16 @@ def run_optimization(target_command: str, seed_tool_des: str, user_prompt: str, 
             target_model=args.target_model,
             auxiliary_model=args.auxiliary_model,
             judge_model=args.judge_model,
-            gradient_model=args.gradient_model,
             use_huggingface=args.use_huggingface,
             max_samples=args.max_samples,
-            skip_gradient=args.skip_gradient,
             config=config,
             agent_name=target_agent
         )
 
-        # Set up models and weights
+        # Set up models
         optimizer.set_target_agent(args.target_model)
         optimizer.set_auxiliary_model(args.auxiliary_model)
         optimizer.set_judge_model(args.judge_model)
-        optimizer.set_gradient_model(args.gradient_model)
-
-        # Update evaluator weights
-        optimizer.evaluator.judge_weight = args.judge_weight
-        optimizer.evaluator.gradient_weight = args.gradient_weight
 
         logger.info("Starting optimization process...")
         logger.info(f"Target command: {input_data.target_command}")
@@ -376,16 +330,6 @@ def main():
     parser.add_argument('--command-file', type=str, default='data/command.txt',
                        help='Path to file containing commands (one per line) (default: data/command.txt)')
 
-    # Batch processing
-    parser.add_argument('--batch-mode', action='store_true', default=False,
-                       help='Run optimization for first 100 user prompts from dataset instead of single prompt')
-    parser.add_argument('--batch-size', type=int, default=1,
-                       help='Number of prompts to process in batch mode (default: 1)')
-
-    # Optional parameters
-    parser.add_argument('--user-prompt', type=str, default="Help me with my task",
-                       help='User prompt to send to agent (default: "Help me with my task")')
-    
     # Optimization strategy
     parser.add_argument('--strategy', type=str, choices=['user_specific'],
                        default='user_specific',
@@ -406,18 +350,7 @@ def main():
                        help='Auxiliary model for mutation generation (default: gpt-5)')
     parser.add_argument('--judge-model', type=str, default='gpt-4',
                        help='Judge model for LLM evaluation (default: gpt-4)')
-    parser.add_argument('--gradient-model', type=str, default='gpt2',
-                       help='Gradient/loss calculation model (default: gpt2)')
-    
-    # Scoring weights
-    parser.add_argument('--judge-weight', type=float, default=0.6,
-                       help='Weight for LLM judge score (default: 0.6)')
-    parser.add_argument('--gradient-weight', type=float, default=0.4,
-                       help='Weight for gradient score (default: 0.4)')
-    parser.add_argument('--skip-gradient', action='store_true', default=True,
-                       help='Skip gradient calculation entirely (only use LLM judge) (default: True)')
-
-    # Dataset options
+# Dataset options
     parser.add_argument('--use-huggingface', action='store_true', default=False,
                        help='Use Hugging Face datasets for LMSYS data (default: False)')
     parser.add_argument('--max-samples', type=int, default=100,
@@ -477,7 +410,7 @@ def main():
                 return 1
         else:
             # Run single optimization
-            success = run_optimization(args.target_command, args.seed_tool, args.user_prompt, args)
+            success = run_optimization(args.target_command, args.seed_tool, args)
 
             if success:
                 logger.info("Optimization completed successfully")

@@ -1,5 +1,6 @@
 api_keys:
-  openai: sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR
+  # openai: sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR
+  openai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   google: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   anthropic: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
   xai: sk-WkWVmcymzlLhjQtJVRjZChcvW2lid4Zfpwi9NDK8QnBJf5wz
@@ -9,16 +10,33 @@ data_path: "/home/zesen/AutoPI/data/open_prompt"
 # Enhanced optimization settings
 enhanced_optimization:
   # Number of variants to generate per mutation iteration
-  n_variants_per_mutation: 5
+  n_variants_per_mutation: 3
 
   # Number of fixed user queries to test each variant with
-  m_fixed_queries: 10
+  m_fixed_queries: 1
+
+  # Maximum number of generation iterations
+  max_generations: 20
 
   # Threshold score for determining success
-  threshold_score: 60.0
+  threshold_score: 100.0
 
   # Enable early stopping when all queries achieve threshold
   early_stopping_enabled: true
+
+  # Parallel processing configuration
+  parallel_processing:
+    # Enable parallel processing
+    enabled: true
+
+    # Maximum number of variants to test in parallel
+    max_workers_variants: 3
+
+    # Maximum number of queries to test in parallel per variant
+    max_workers_queries: 5
+
+    # Timeout per query in seconds
+    timeout_per_query: 120
 
 # Variant generation settings
 variant_generation:

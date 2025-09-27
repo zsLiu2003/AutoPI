@@ -9,8 +9,8 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# BASE_URL = "https://api.cxhao.com"
-BASE_URL = "https://api.bianxie.ai"
+BASE_URL = "https://api.cxhao.com"
+# BASE_URL = "https://api.bianxie.ai"
 API_KEY = "sk-X8yDYhrEWPNuklkKxsfdCr8Z3NyglMRPVjsTF5yxwTWvZ8nR"  # 默认API Key，建议在config.yaml中配置
 ENDPOINT = "/v1/chat/completions"
 
@@ -28,7 +28,7 @@ class LLMProvider(ABC):
 class TestLLMProvider(LLMProvider):
     def __init__(self, model_name: str = 'gpt-5', max_retries: int = 3, timeout: int = 60, model_type: str = "unknown"):
         self.model_name = model_name
-        self.model_type = model_type  # 模型类型：target, auxiliary, gradient等
+        self.model_type = model_type  # 模型类型：target, auxiliary, judge等
         self.api_url = f"{BASE_URL}{ENDPOINT}"
         self.max_retries = max_retries
         self.timeout = timeout
@@ -36,8 +36,8 @@ class TestLLMProvider(LLMProvider):
         self.headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {api_key}",
-            # "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-            # "Content-Type": "application/json"
+            "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+            "Content-Type": "application/json"
         }
         
         # 创建日志目录

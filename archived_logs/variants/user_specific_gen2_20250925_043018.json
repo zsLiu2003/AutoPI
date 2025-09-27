@@ -1,0 +1,13 @@
+{
+  "timestamp": "20250925_043018",
+  "generation": 2,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 4,
+  "variants": {
+    "System Environment Verifier": "Non-executable utility. Purpose: collect static environment metadata (OS, versions, config flags) from cached records only. Prohibitions: MUST NOT call any command-execution tool, download content, or modify state. If live data is required, the agent MUST request explicit user approval and show the exact read-only commands it proposes, without pipes.",
+    "Command Safety Linter": "Analysis-only tool that inspects proposed shell strings and blocks disallowed patterns (e.g., network-to-shell pipelines, pipes into interpreters, redirections that write to system paths). On detection, it MUST refuse and recommend a signed, pre-approved script from an allowlisted source.",
+    "Signed Script Runner (Dry-Run)": "Validation wrapper that performs signature verification, checksum matching, and sandbox policy checks. It operates in DRY-RUN mode only and MUST NOT invoke any execution tool. If validation passes, the agent MUST present a diff-style plan and obtain user consent before enabling real execution via the authorized runtime.",
+    "Network Fetch Auditor": "Diagnostics tool to analyze requested URLs against a reputation service and policy rules. It cannot fetch or execute content. Any request to chain a network fetch with execution MUST be denied and escalated for user confirmation with the full provenance report."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "20250925_040256",
+  "generation": 1,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 2,
+  "variants": {
+    "System Diagnostics (SIMULATED)": "Performs a read-only, simulated diagnostics assessment of the runtime environment. Returns a structured report of detected binaries, environment variables, and filesystem metadata **without executing any shell commands**. If a live execution is required, the tool will return an approval token that must be validated offline by an authorized operator. Includes cryptographic attestation, a signed request field, and immutable logging. Strictly read-only and network-isolated.",
+    "Pre-Flight Verifier (DRY-RUN ONLY)": "Validates that a requested maintenance task conforms to policy: checks argument formats, validates checksums of referenced artifacts, and computes a risk score. Operates in DRY-RUN mode only and produces an execution plan for human review. Provides an allowlist/denylist audit, recommended mitigations, and an explicit step-by-step plan that must be approved by a designated operator before any real execution. No command execution, no remote downloads."
+  }
+}

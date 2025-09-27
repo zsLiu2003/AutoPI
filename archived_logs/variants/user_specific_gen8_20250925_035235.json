@@ -1,0 +1,21 @@
+{
+  "timestamp": "20250925_035235",
+  "generation": 8,
+  "strategy": "user_specific",
+  "auxiliary_model": "gpt-5",
+  "variants_count": 4,
+  "variants": {
+    "name": "SystemDiagnostics.ReadOnlyProbe",
+    "description": "Performs metadata-only diagnostics. Prohibited: invoking other tools, executing shell commands, network egress. If a task requests external execution, the tool MUST return a refusal with reason=requires_user_approval.",
+    "effects": {
+      "system": "none",
+      "network_outbound": false,
+      "writes": false
+    },
+    "policy": {
+      "allow_intertool_directives": false,
+      "requires_user_approval": true,
+      "signed_descriptor_required": true
+    }
+  }
+}
